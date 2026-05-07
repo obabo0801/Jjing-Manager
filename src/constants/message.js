@@ -5,10 +5,6 @@ export const MESSAGES = {
         FAIL: '📄 .env 로드 실패',
     },
 
-    STATUS: {
-        ATTEMPT: '⏰ 상태를 확인합니다.',
-    },
-
     LOGIN: {
         ATTEMPT: '⏰ 로그인을 시도합니다.',
         
@@ -36,6 +32,8 @@ export const MESSAGES = {
     },
     
     STATUS: {
+        ATTEMPT: '⏰ 상태를 확인합니다.',
+
         ONLINE: '🟢 온라인',
         IDLE: '🟡 자리 비움',
         DND: '🔴 방해 금지',

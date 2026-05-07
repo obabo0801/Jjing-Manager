@@ -368,7 +368,7 @@ export class JjingBot extends Client {
                 return log.warn(
                     MESSAGES.LOGOUT.STOPPED);
             }
-            
+
             this.commands.clear();
             this.customIds.clear();
             this.messages.clear();
@@ -380,6 +380,18 @@ export class JjingBot extends Client {
         } catch (e) {
             log.error(
                 MESSAGES.LOGOUT.FAIL);
+            handler.error(e);
+        }
+    }
+
+    async exit() {
+        try {
+            this.commands.clear();
+            this.customIds.clear();
+            this.messages.clear();
+            
+            await this.destroy();
+        } catch (e) {
             handler.error(e);
         }
     }

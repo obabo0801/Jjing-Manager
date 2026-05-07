@@ -434,10 +434,8 @@ async function shutdown() {
         MESSAGES.SYSTEM.QUIT);
 
     for (const [id, client] of clients) {
-        await stop(client);
+        await client.exit();
     }
-
-    rl.prompt(); rl.close();
 
     process.exit(0);
 }
