@@ -69,8 +69,8 @@ function initialize() {
     log.prompt('　Jjing Bot Manager 🐕')
     render(true);
     log.prompt('[Commands]\n')
-    log.prompt(' start   restart   stop');
-    log.prompt(' state   refresh   exit');
+    log.prompt(' start   restart  stop ');
+    log.prompt(' status  refresh  exit ');
     log.prompt('─────────────────────────')
 
     rl.prompt();
@@ -184,9 +184,9 @@ async function handler(input) {
         }
         break;
     }
-    case 'state': {
+    case 'status': {
         log.cmd(
-            MESSAGES.STATES.ATTEMPT);
+            MESSAGES.STATUS.ATTEMPT);
         const i = arg 
             ? check(arg) : await select();
         if (i === null) {
@@ -194,9 +194,9 @@ async function handler(input) {
         }
         try {
             if (i === 0) {
-                await statesAll();
+                await statusAll();
             } else {
-                await states(
+                await status(
                     clients.get(i))
                 ready(clients.get(i));
             }
@@ -245,7 +245,7 @@ async function render(show = false) {
 
     for (const [k, v] of clients) {
         const i = show ? `[${k}] ` : '';
-        const status = v.getStarts?.();
+        const status = v.getStatus?.();
         log.prompt(`${i}` + `${v.jjing?.name} `
             + `${status}`);
     }
@@ -253,10 +253,10 @@ async function render(show = false) {
     log.prompt('\n─────────────────────────')
 }
 
-async function showStates(client) {
+async function showStatus(client) {
     log.prompt('─────────────────────────\n')
 
-    const status = client.getStarts?.();
+    const status = client.getStatus?.();
     const bot = client.user?.tag || 'UNKNOWN';
     const total = Math.floor(client.uptime / 1000);
     const hour = Math.floor(total / 3600);
@@ -280,14 +280,14 @@ async function showStates(client) {
     log.prompt('─────────────────────────')
 }
 
-function states(client) {
+function status(client) {
     if (!client) {
         initialize(); return;
     }
 
     return new Promise(async (resolve) => {
 
-    await showStates(client);
+    await showStatus(client);
 
     rl.question('', (i) => {
         resolve();
@@ -296,13 +296,13 @@ function states(client) {
     });
 }
 
-async function statesAll() {
+async function statusAll() {
     if (clients.size === 0) {
         initialize(); return;
     }
 
     for (const [id, client] of clients) {
-        await showStates(client);
+        await showStatus(client);
     }
     
     return new Promise(async (resolve) => {

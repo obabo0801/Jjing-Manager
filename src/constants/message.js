@@ -5,7 +5,7 @@ export const MESSAGES = {
         FAIL: '📄 .env 로드 실패',
     },
 
-    STATES: {
+    STATUS: {
         ATTEMPT: '⏰ 상태를 확인합니다.',
     },
 

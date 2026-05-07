@@ -262,7 +262,7 @@ export class JjingBot extends Client {
         log.prompt('─────────────────────────')
     }
 
-    getStarts() {
+    getStatus() {
         return STATUS[this.user?.presence.status]
             || STATUS.invisible;
     }
@@ -270,7 +270,7 @@ export class JjingBot extends Client {
     #changeStatus(status) {
         if (!status) return;
         this.user?.setPresence({status});
-        log.info(this.getStarts());
+        log.info(this.getStatus());
     }
 
     async #printGuild(guildId) {
