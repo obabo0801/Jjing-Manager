@@ -229,10 +229,7 @@ async function handler(input) {
         break;
     }
     case 'exit': {
-        log.cmd(
-            MESSAGES.SYSTEM.QUIT);
-        rl.prompt();
-        process.exit(0);
+        await shutdown();
         break;
     }
     default:
@@ -432,8 +429,25 @@ async function refreshAll() {
     } else { initialize(); }
 }
 
-process.on('SIGINT', () => {
+async function shutdown() {
     log.cmd(
         MESSAGES.SYSTEM.QUIT);
+
+    for (const [id, client] of clients) {
+        await stop(client);
+    }
+
+    rl.prompt(); rl.close();
+
     process.exit(0);
-});
+}
+
+process.on('uncaughtException',
+    log.error
+);
+process.on('unhandledRejection',
+    log.error
+);
+
+process.on('SIGINT', shutdown);
+process.on('SIGTERM', shutdown);
