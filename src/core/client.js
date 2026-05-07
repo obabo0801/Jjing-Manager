@@ -98,6 +98,10 @@ export class JjingBot extends Client {
                 MESSAGES.REFRESH.NOT_RUNNING);
         }
 
+        this.commands.clear();
+        this.customIds.clear();
+        this.messages.clear();
+
         await this.loadScripts(path);
         await this.deployCommands();
     }
