@@ -268,7 +268,7 @@ async function showStates(client) {
     const global = await client.isGlobal?.();
     const guild = await client.isGuild?.();
     const ping = `${client.ws.ping}ms`;
-    const uptime = `${hour}s ${min}h ${sec}m`;
+    const uptime = `${hour}h ${min}m ${sec}s`;
 
     log.prompt(`${client.jjing?.name} `
         + `${status}`);
