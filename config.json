@@ -1,5 +1,6 @@
 {
     "bots": {
+
         "1": {
             "name": "Jjing Bot 🐕",
             "path": "src/commands",
@@ -7,7 +8,7 @@
             "delay": 5,
             "count": 3,
 
-            "token": "DISCORD_TOKEN",
+            "token": "JJING_TOKEN",
             "status": "online",
             
             "clientId": "0",
@@ -16,11 +17,12 @@
     },
 
     "googles": {
+
         "1": {
             "name": "회사 공금 🏢",
-            "email": "GOOGLE_SERVICE1_EMAIL",
-            "key": "GOOGLE_SERVICE1_KEY",
-            "sheetId": "GOOGLE_SERVICE1_ID"
+            "email": "GOOGLE_FUND_EMAIL",
+            "key": "GOOGLE_FUND_KEY",
+            "sheetId": "GOOGLE_FUND_ID"
         }
     }
 }

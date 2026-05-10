@@ -3,7 +3,7 @@ import readline from 'readline';
 
 import { MESSAGES, setLanguage } from '#i18n';
 import { DiscordBot } from '#discord';
-import { GoogleService } from '#google';
+import { GoogleSheet } from '#google';
 import { error } from '#handler';
 
 import * as file from '#file';
@@ -80,7 +80,7 @@ function configGoogles(name) {
         .forEach(([key, value]) => {
         const id = Number(key);
 
-        googles.set(id, new GoogleService());
+        googles.set(id, new GoogleSheet());
         googles.get(id).config(value);
     });
 }

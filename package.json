@@ -25,10 +25,10 @@
   "imports": {
     "#i18n": "./src/locals/index.js",
 
-    "#discord": "./src/discord/client.js",
-    "#handler": "./src/discord/handler.js",
+    "#discord": "./src/services/discord/client.js",
+    "#handler": "./src/services/discord/handler.js",
 
-    "#google": "./src/google/service.js",
+    "#google": "./src/services/google/sheet.js",
 
     "#base64": "./src/utils/base64.js",
     "#file": "./src/utils/file.js",

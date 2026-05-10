@@ -5,7 +5,7 @@ import { error } from '#handler';
 
 import * as log from '#log';
 
-export class GoogleService {
+export class GoogleSheet {
     constructor() {
         this.cache = new Map();
         this.auth = null;
