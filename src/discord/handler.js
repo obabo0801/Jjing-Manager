@@ -8,7 +8,7 @@ const interactions = [
     ['autocomplete', i => i.isAutocomplete()],
     ['button', i => i.isButton()],
     ['stringSelectMenu', i => i.isStringSelectMenu()],
-    ['modalSubmit', i => i.isModalSubmit()]
+    ['modalSubmit', i => i.isModalSubmit()],
 ];
 
 const errors = [
@@ -17,7 +17,11 @@ const errors = [
     [50001, MESSAGES.COMMAND.MISSING_ACCESS],
     [50035, MESSAGES.ERROR.BODY_INVALID],
     [10002, MESSAGES.COMMAND.CLIENT_INVALID],
-    [10004, MESSAGES.GUILD.GUILD_INVALID]
+    [10004, MESSAGES.GUILD.INVALID],
+    [400, MESSAGES.SHEET.ERROR400],
+    [401, MESSAGES.SHEET.ERROR401],
+    [403, MESSAGES.SHEET.ERROR403],
+    [404, MESSAGES.SHEET.ERROR404],
 ];
 
 export function interaction(client, i) {

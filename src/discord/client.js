@@ -8,15 +8,7 @@ import * as handler from '#handler';
 import * as file from '#file';
 import * as log from '#log';
 
-const STATUS = Object.freeze({
-    online: MESSAGES.STATUS.ONLINE,
-    idle: MESSAGES.STATUS.IDLE,
-    dnd: MESSAGES.STATUS.DND,
-    invisible: MESSAGES.STATUS.INVISIBLE,
-    unknown: MESSAGES.STATUS.UNKNOWN,
-});
-
-export class JjingBot extends Client {
+export class DiscordBot extends Client {
 
     constructor() { super({ intents: [
         GatewayIntentBits.GuildMessages,
@@ -165,6 +157,15 @@ export class JjingBot extends Client {
         }
     }
 
+    async getGlobal() {
+        const res = await this.isGlobal();
+        if (res) {
+            return '🟢';
+        } else {
+            return '🔴';
+        }
+    }
+
     async isGlobal() {
         try {
             const rest = new REST({ version: '10' })
@@ -183,6 +184,15 @@ export class JjingBot extends Client {
             return true;
         } catch {
             return false;
+        }
+    }
+
+    async getGuild() {
+        const res = await this.isGuild();
+        if (res) {
+            return '🟢';
+        } else {
+            return '🔴';
         }
     }
 
@@ -211,8 +221,9 @@ export class JjingBot extends Client {
     isDeploy() { return this.deploy; }
 
     getStatus() {
-        return STATUS[this.user?.presence.status]
-            || STATUS.invisible;
+        return MESSAGES.STATUS[
+            this.user?.presence.status.toUpperCase()]
+            || MESSAGES.STATUS.INVISIBLE;
     }
     
     #changeStatus(status) {
@@ -277,8 +288,14 @@ export class JjingBot extends Client {
         }
     }
 
-    async stop() {
+    async stop(skip = false) {
         try {
+            if (skip) {
+                this.commands.clear();
+                await this.destroy();
+                return;
+            }
+
             this.#printBanner();
             this.deploy = true;
 
@@ -287,7 +304,7 @@ export class JjingBot extends Client {
                     MESSAGES.LOGOUT.STOPPED);
             }
 
-            this.commands.clear();
+            this.commands?.clear();
             await this.destroy();
 
             log.load(
@@ -295,15 +312,6 @@ export class JjingBot extends Client {
         } catch (e) {
             log.error(
                 MESSAGES.LOGOUT.FAIL);
-            handler.error(e);
-        }
-    }
-
-    async exit() {
-        try {
-            this.commands.clear();
-            await this.destroy();
-        } catch (e) {
             handler.error(e);
         }
     }
@@ -362,7 +370,7 @@ export class JjingBot extends Client {
 
     #undefinedGuild() {
         throw new Error(
-            MESSAGES.GUILD.GUILD_UNDEFINED);
+            MESSAGES.GUILD.UNDEFINED);
     }
 
     #undefinedToken() {

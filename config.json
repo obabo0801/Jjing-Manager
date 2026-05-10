@@ -1,15 +1,26 @@
 {
-    "1": {
-        "name": "Jjing Bot 🐕",
-        "path": "src/commands",
+    "bots": {
+        "1": {
+            "name": "Jjing Bot 🐕",
+            "path": "src/commands",
 
-        "delay": 5,
-        "count": 3,
+            "delay": 5,
+            "count": 3,
 
-        "token": "JJING_TOKEN",
-        "status": "online",
-        
-        "clientId": "0",
-        "guildId": "0"
+            "token": "DISCORD_TOKEN",
+            "status": "online",
+            
+            "clientId": "0",
+            "guildId": "0"
+        }
+    },
+
+    "googles": {
+        "1": {
+            "name": "회사 공금 🏢",
+            "email": "GOOGLE_SERVICE1_EMAIL",
+            "key": "GOOGLE_SERVICE1_KEY",
+            "sheetId": "GOOGLE_SERVICE1_ID"
+        }
     }
 }

@@ -19,13 +19,16 @@
   },
   "dependencies": {
     "discord.js": "^14.26.4",
-    "dotenv": "^17.4.2"
+    "dotenv": "^17.4.2",
+    "googleapis": "^171.4.0"
   },
   "imports": {
-    "#message": "./src/constants/message.js",
+    "#message": "./src/locals/language.js",
 
-    "#client": "./src/core/client.js",
-    "#handler": "./src/core/handler.js",
+    "#discord": "./src/discord/client.js",
+    "#handler": "./src/discord/handler.js",
+
+    "#google": "./src/google/service.js",
 
     "#base64": "./src/utils/base64.js",
     "#file": "./src/utils/file.js",

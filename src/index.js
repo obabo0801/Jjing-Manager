@@ -1,8 +1,10 @@
 import { config, parse } from 'dotenv';
 import readline from 'readline';
 
-import { MESSAGES } from '#message';
-import { JjingBot } from '#client';
+import { MESSAGES, setLanguage } from '#message';
+import { DiscordBot } from '#discord';
+import { GoogleService } from '#google';
+import { error } from '#handler';
 
 import * as file from '#file';
 import * as log from '#log';
@@ -14,14 +16,17 @@ const rl = readline.createInterface({
     prompt: '',
 });
 
-let clients = new Map();
+let googles = new Map();
+let bots = new Map();
 
 (async () => {
-    config({ quiet: true });
     try {
-        await setupClients();
+        config({ quiet: true });
+        parseEnv('.env', false);
+        await setupGoogles();
+        await setupBots();
     } catch (e) {
-        log.error(e.message);
+        error(e);
         initialize();
     }
 })();
@@ -45,254 +50,216 @@ function parseEnv(name, show = true) {
             }
         }
 
+        setLanguage(process.env.LANGUAGE);
+
         if (show) {
-            log.load(
-                MESSAGES.ENV.SUCCESS);
+            log.load(MESSAGES.ENV.SUCCESS);
         }
     } catch (e) {
         if (show) {
-            log.error(
-                MESSAGES.ENV.FAIL);
+            log.error(MESSAGES.ENV.FAIL);
+            error(e);
         }
     }
 }
 
-rl.on('line', async (input) => {
-    const cmd = input.trim();
-    log.input(cmd); rl.pause();
-    await handler(cmd);
-});
+// ───────────────────────── GOOGLE SETUP
 
-function initialize(hide = false) {
-    if (hide) log.clear();
-
-    log.prompt('─────────────────────────')
-    log.prompt('　Jjing Bot Manager 🐕')
-    render(true);
-    log.prompt('[Commands]\n')
-    log.prompt(' start   restart  stop ');
-    log.prompt(' status  refresh  exit ');
-    log.prompt('─────────────────────────')
-
-    rl.prompt();
+async function setupGoogles() {
+    configGoogles('config.json');
+    await startGoogles();
 }
 
-async function setupClients() {
-    parseEnv('.env', false);
+function configGoogles(name) {
+    googles.clear();
 
-    configClients('config.json');
+    const config = file.json(name);
+    if (!config) return;
+
+    Object.entries(config.googles)
+        .forEach(([key, value]) => {
+        const id = Number(key);
+
+        googles.set(id, new GoogleService());
+        googles.get(id).config(value);
+    });
+}
+
+async function startGoogles() {
+    for (const [id, google] of googles) {
+        await google.start();
+    }
+}
+
+async function stopGoogles() {
+    for (const [id, google] of googles) {
+        await google.stop();
+    }
+}
+
+async function exitGoogles() {
+    for (const [id, google] of googles) {
+        await google.stop(true);
+    }
+}
+
+async function renderGoogles(show = false) {
+    log.prompt('─────────────────────────\n')
+
+    for (const [k, v] of googles) {
+        const i = show ? `[${k}] ` : '';
+        const status = await v.getStatus?.();
+
+        log.prompt(`${i}${v.name} ${status}`);
+    }
+
+    log.prompt('\n─────────────────────────')
+}
+
+// ───────────────────────── BOT SETUP
+
+async function setupBots() {
+    configBots('config.json');
 
     const s = process.env.START;
 
     if (s === '0') {
-        await startAll();
+        await startBots();
         return;
     }
 
     const id = Number(s);
-    const client = clients.get(id);
+    const bot = bots.get(id);
 
-    if (!isNaN(id) && client) {
-        await start(client);
-        ready(client); return;
+    if (!isNaN(id) && bot) {
+        await startBot(bot);
+        ready(bot); return;
     }
 
     initialize();
 }
 
-function configClients(name) {
-    clients.clear();
+function configBots(name) {
+    bots.clear();
 
     const config = file.json(name);
-    
     if (!config) return;
 
-    Object.entries(config)
+    Object.entries(config.bots)
         .forEach(([key, value]) => {
         const id = Number(key);
 
-        clients.set(id, new JjingBot());
-        clients.get(id).config(value);
+        bots.set(id, new DiscordBot());
+        bots.get(id).config(value);
     });
 }
 
-async function initClients(id) {
-    const old = clients.get(id);
+async function initBots(id) {
+    const old = bots.get(id);
     if (old.isReady()) return;
-    const client = new JjingBot();
-    client.deploy = true;
-    client.config(old.jjing);
-    clients.set(id, client);
+
+    const bot = new DiscordBot();
+    bot.deploy = true;
+    bot.config(old.jjing);
+
+    bots.set(id, bot);
 }
 
-async function handler(input) {
-    const [cmd, arg] = input.split(' ');
-    switch (cmd) {
-    case 'start': {
-        log.cmd(
-            MESSAGES.LOGIN.ATTEMPT);
-        const i = arg 
-            ? check(arg) : await select();
-        if (i === null) {
-            initialize(); break;
-        }
-        try {
-            if (i === 0) {
-                await startAll();
-            } else {
-                await start(
-                    clients.get(i));
-                ready(clients.get(i));
-            }
-        } catch (e) {
-            log.error(e.message);
-            rl.prompt();
-        }
-        break;
+async function startBot(bot) {
+    pause();
+    await bot.start();
+    await delay(bot);
+}
+
+async function stopBot(bot) {
+    pause();
+    await bot.stop();
+}
+
+async function refreshBot(bot) {
+    pause();
+    await bot.reloadScripts();
+}
+
+async function startBots() {
+    for (const [id, bot] of bots) {
+        await startBot(bot);
     }
-    case 'restart': {
-        log.cmd(
-            MESSAGES.LOGIN.RESTART);
-        try {
-            await stopAll();
-            await setupClients();
-        } catch (e) {
-            log.error(e.message);
-            rl.prompt();
-        }
-        break;
+
+    const bot = [...bots.values()].at(-1);
+    
+    if (bot) { ready(bot);
+    } else { initialize(); }
+}
+
+async function stopBots() {
+    for (const [id, bot] of bots) {
+        await stopBot(bot);
+        initBots(id); 
     }
-    case 'stop': {
-        log.cmd(
-            MESSAGES.LOGOUT.ATTEMPT);
-        const i = arg 
-            ? check(arg) : await select();
-        if (i === null) {
-            initialize(); break;
-        }
-        try {
-            if (i === 0) {
-                await stopAll();
-            } else {
-                await stop(
-                    clients.get(i));
-                ready(clients.get(i));
-                initClients(i); 
-            }
-        } catch (e) {
-            log.error(e.message);
-            rl.prompt();
-        }
-        break;
-    }
-    case 'status': {
-        log.cmd(
-            MESSAGES.STATUS.ATTEMPT);
-        const i = arg 
-            ? check(arg) : await select();
-        if (i === null) {
-            initialize(); break;
-        }
-        try {
-            if (i === 0) {
-                await statusAll();
-            } else {
-                await status(
-                    clients.get(i))
-                ready(clients.get(i));
-            }
-        } catch (e) {
-            log.error(e.message);
-            rl.prompt();
-        }
-        break;
-    }
-    case 'refresh': {
-        log.cmd(
-            MESSAGES.REFRESH.ATTEMPT);
-        const i = arg 
-            ? check(arg) : await select();
-        if (i === null) {
-            initialize(); break;
-        }
-        try {
-            if (i === 0) {
-                await refreshAll();
-            } else {
-                await refresh(
-                    clients.get(i));
-                ready(clients.get(i));
-            }
-        } catch (e) {
-            log.error(e.message);
-            rl.prompt();
-        }
-        break;
-    }
-    case 'clear': {
-        await initialize(true);
-        break;
-    }
-    case 'exit': {
-        await shutdown();
-        break;
-    }
-    default:
-        log.warn(`❓ '${cmd}' `
-            + MESSAGES.SYSTEM.UNKNOWN);
-        rl.prompt();
+    
+    const bot = [...bots.values()].at(-1);
+    
+    if (bot) { ready(bot);
+    } else { initialize(); }
+}
+
+async function exitBots() {
+    for (const [id, bot] of bots) {
+        await bot.stop(true);
     }
 }
 
-async function render(show = false) {
+async function renderBots(show = false) {
     log.prompt('─────────────────────────\n')
-    if (show) log.prompt('[0] All Bots');
 
-    for (const [k, v] of clients) {
+    if (show) log.prompt(MESSAGES.CLI.BOTS);
+
+    for (const [k, v] of bots) {
         const i = show ? `[${k}] ` : '';
         const status = v.getStatus?.();
-        log.prompt(`${i}` + `${v.jjing?.name} `
-            + `${status}`);
+
+        log.prompt(`${i}${v.jjing?.name} ${status}`);
     }
 
     log.prompt('\n─────────────────────────')
 }
 
-async function showStatus(client) {
+async function showBot(bot) {
     log.prompt('─────────────────────────\n')
 
-    const status = client.getStatus?.();
-    const bot = client.user?.tag || 'UNKNOWN';
-    const total = Math.floor(client.uptime / 1000);
+    const status = bot.getStatus?.();
+    const name = bot.user?.tag || 'UNKNOWN';
+
+    const total = Math.floor(bot.uptime / 1000);
     const hour = Math.floor(total / 3600);
     const min = Math.floor((total % 3600) / 60);
     const sec = total % 60;
-    const global = await client.isGlobal?.();
-    const guild = await client.isGuild?.();
-    const ping = `${client.ws.ping}ms`;
+
+    const global = await bot.getGlobal?.();
+    const guild = await bot.getGuild?.();
+
+    const ping = `${bot.ws.ping}ms`;
     const uptime = `${hour}h ${min}m ${sec}s`;
 
-    log.prompt(`${client.jjing?.name} `
-        + `${status}`);
+    log.prompt(`${bot.jjing?.name} ${status}`);
     log.prompt('\n─────────────────────────')
-    log.prompt(`BOT        ${bot}`);
-    log.prompt(global
-        ? `GLOBAL     🟢` : `GLOBAL     🔴`)
-    log.prompt(guild
-        ? `GUILD      🟢` : `GUILD      🔴`)
-    log.prompt(`PING       ${ping}`);
-    log.prompt(`UPTIME     ${uptime}`);
+    log.prompt(`${MESSAGES.CLI.NAME} ${name}`);
+    log.prompt(`${MESSAGES.CLI.GLOBAL} ${global}`);
+    log.prompt(`${MESSAGES.CLI.GUILD} ${guild}`);
+    log.prompt(`${MESSAGES.CLI.PING} ${ping}`);
+    log.prompt(`${MESSAGES.CLI.UPTIME} ${uptime}`);
     log.prompt('─────────────────────────')
 }
 
-function status(client) {
-    if (!client) {
+function statusBot(bot) {
+    if (!bot) {
         initialize(); return;
     }
 
     return new Promise(async (resolve) => {
 
-    await showStatus(client);
+    await showBot(bot);
 
     rl.question('', (i) => {
         resolve();
@@ -301,22 +268,21 @@ function status(client) {
     });
 }
 
-async function statusAll() {
-    if (clients.size === 0) {
-        initialize(); return;
+async function statusBots() {
+    if (bots.size === 0) {
+        return initialize();
     }
 
-    for (const [id, client] of clients) {
-        await showStatus(client);
+    for (const [id, bot] of bots) {
+        await showBot(bot);
     }
     
     return new Promise(async (resolve) => {
 
     rl.question('', (i) => {
-        const client = [...clients
-            .values()].at(-1);
+        const bot = [...bots.values()].at(-1);
         
-        if (client) { ready(client);
+        if (bot) { ready(bot);
         } else { initialize(); }
 
         resolve();
@@ -325,30 +291,185 @@ async function statusAll() {
     });
 }
 
+async function refreshBots() {
+    for (const [id, bot] of bots) {
+        await refreshBot(bot);
+    }
+    
+    const bot = [...bots.values()].at(-1);
+    
+    if (bot) { ready(bot);
+    } else { initialize(); }
+}
+
 function check(num) {
     const i = parseInt(num);
 
-    if (isNaN(i) || (i !== 0
-        && !clients.get(i))) {
+    if (isNaN(i) || (i !== 0 && !bots.get(i))) {
         return null;
     }
 
     return i;
 }
 
+// ───────────────────────── CLI
+
+rl.on('line', async (input) => {
+    const cmd = input.trim();
+    log.input(cmd);
+    pause();
+
+    await handler(cmd);
+});
+
+async function initialize(hide = false) {
+    if (hide) log.clear();
+
+    log.prompt('─────────────────────────')
+    log.prompt(MESSAGES.CLI.GOOGLE);
+    await renderGoogles(true);
+
+    log.prompt(MESSAGES.CLI.DISCORD);
+    await renderBots(true);
+
+    log.prompt(MESSAGES.CLI.COMMAND);
+    log.prompt(format(MESSAGES.CLI.COMMANDS));
+    log.prompt('─────────────────────────')
+
+    prompt();
+}
+
+function format(commands) {
+    const values = Object.values(commands);
+
+    const column = 3;
+    const rows = [];
+
+    for (let i = 0; i < values.length; i += column) {
+        rows.push(values.slice(i, i + column).join('   '));
+    }
+
+    return rows.join('\n');
+}
+
+// ───────────────────────── COMMAND
+
+async function handler(input) {
+    const [cmd, arg] = input.split(' ');
+
+    switch (cmd) {
+
+    case MESSAGES.CLI.COMMANDS.START: {
+        log.cmd(MESSAGES.LOGIN.ATTEMPT);
+        const i = arg ? check(arg) : await select();
+        if (i === null) return initialize();
+
+        try {
+            if (i === 0) await startBots();
+            else {
+                await startBot(bots.get(i));
+                ready(bots.get(i));
+            }
+        } catch (e) {
+            error(e);
+            prompt();
+        }
+        break;
+    }
+
+    case MESSAGES.CLI.COMMANDS.RESTART: {
+        log.cmd(MESSAGES.LOGIN.RESTART);
+        try {
+            parseEnv('.env', false);
+            await stopBots();
+            await setupBots();
+        } catch (e) {
+            error(e);
+            prompt();
+        }
+        break;
+    }
+
+    case MESSAGES.CLI.COMMANDS.STOP: {
+        log.cmd(MESSAGES.LOGOUT.ATTEMPT);
+        const i = arg ? check(arg) : await select();
+        if (i === null) return initialize();
+        try {
+            if (i === 0) await stopBots();
+            else {
+                await stopBot(bots.get(i));
+                ready(bots.get(i));
+                initBots(i); 
+            }
+        } catch (e) {
+            error(e);
+            prompt();
+        }
+        break;
+    }
+
+    case MESSAGES.CLI.COMMANDS.STATUS: {
+        log.cmd(MESSAGES.STATUS.ATTEMPT);
+        const i = arg ? check(arg) : await select();
+        if (i === null) return initialize();
+        try {
+            if (i === 0) await statusBots();
+            else {
+                await statusBot(bots.get(i))
+                ready(bots.get(i));
+            }
+        } catch (e) {
+            error(e);
+            prompt();
+        }
+        break;
+    }
+
+    case MESSAGES.CLI.COMMANDS.REFRESH: {
+        log.cmd(MESSAGES.REFRESH.ATTEMPT);
+        const i = arg ? check(arg) : await select();
+        if (i === null) return initialize();
+
+        try {
+            if (i === 0) {
+                await refreshBots();
+            } else {
+                await refreshBot(bots.get(i));
+                ready(bots.get(i));
+            }
+        } catch (e) {
+            error(e);
+            prompt();
+        }
+        break;
+    }
+
+    case MESSAGES.CLI.COMMANDS.CLEAR: {
+        return initialize(true);
+    }
+
+    case MESSAGES.CLI.COMMANDS.EXIT: {
+        return shutdown();
+    }
+
+    default:
+        log.warn(`❓ '${cmd}' ` + MESSAGES.SYSTEM.UNKNOWN);
+        prompt();
+    }
+}
+
 function select() {
     return new Promise((resolve) => {
     
-    render(true);
+    renderBots(true);
 
     rl.question('', (i) => {
         const num = parseInt(i);
         log.input(i);
 
-        if (isNaN(num) || (num !== 0
-        && !clients.get(num))) {
+        if (isNaN(num) || (num !== 0 && !bots.get(num))) {
             initialize();
-            rl.prompt();
+            prompt();
             return resolve(null);
         }
             
@@ -358,17 +479,17 @@ function select() {
     });
 }
 
-async function ready(client) {
-    if (await delay(client)) {
+async function ready(bot) {
+    if (await delay(bot)) {
         initialize();
     }
 }
 
-async function delay(client) {
+async function delay(bot) {
     return new Promise((resolve) => {
     
     const check = () => {
-        if (client?.isDeploy()) {
+        if (bot?.isDeploy()) {
             resolve(true);
             return;
         }
@@ -376,81 +497,43 @@ async function delay(client) {
         setTimeout(check, 1000);
     }
 
-    check();
+    setTimeout(check, 1000);
 
     });
 }
 
-async function start(client) {
-    rl.pause();
-    await client.start();
-    await delay(client);
+function prompt() {
+    if (!rl.closed) rl.prompt();
 }
 
-async function  stop(client) {
-    rl.pause();
-    await client.stop();
+function pause() {
+    if (!rl.closed) rl.pause();
 }
 
-async function  refresh(client) {
-    rl.pause();
-    await client.reloadScripts();
-}
-
-async function startAll() {
-    for (const [id, client] of clients) {
-        await start(client);
-    }
-
-    const client = [...clients
-        .values()].at(-1);
-    
-    if (client) { ready(client);
-    } else { initialize(); }
-}
-
-async function stopAll() {
-    for (const [id, client] of clients) {
-        await stop(client);
-        initClients(id); 
-    }
-    
-    const client = [...clients
-        .values()].at(-1);
-    
-    if (client) { ready(client);
-    } else { initialize(); }
-}
-
-async function refreshAll() {
-    for (const [id, client] of clients) {
-        await refresh(client);
-    }
-    
-    const client = [...clients
-        .values()].at(-1);
-    
-    if (client) { ready(client);
-    } else { initialize(); }
+function close() {
+    if (!rl.closed) rl.close();
 }
 
 async function shutdown() {
-    log.cmd(
-        MESSAGES.SYSTEM.QUIT);
+    close();
 
-    for (const [id, client] of clients) {
-        await client.exit();
-    }
+    log.cmd(MESSAGES.SYSTEM.QUIT);
+    
+    await exitGoogles();
+    await exitBots();
 
     process.exit(0);
 }
 
-process.on('uncaughtException',
-    log.error
-);
-process.on('unhandledRejection',
-    log.error
-);
+process.on('uncaughtException', (err) => {
+    prompt();
+    log.error(err?.stack || err);
+});
+
+process.on('unhandledRejection', (reason) => {
+    prompt();
+    log.error(reason?.stack || reason);
+});
 
 process.on('SIGINT', shutdown);
 process.on('SIGTERM', shutdown);
