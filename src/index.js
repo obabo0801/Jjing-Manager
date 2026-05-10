@@ -431,6 +431,7 @@ async function handler(input) {
         if (i === null) return initialize();
 
         try {
+            parseEnv('.env', false);
             if (i === 0) {
                 await refreshBots();
             } else {
