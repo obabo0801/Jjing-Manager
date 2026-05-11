@@ -269,9 +269,9 @@ export class GoogleSheet {
     
         if (!name) return;
         log.prompt('')
-        log.prompt('─────────────────────────')
+        log.prompt('───────────────────────────────────────')
         log.prompt(`${name}`);
-        log.prompt('─────────────────────────')
+        log.prompt('───────────────────────────────────────')
     }
 
     error(error) {

@@ -115,6 +115,8 @@ export const MESSAGES = {
     },
 
     LOAD: {
+        ATTEMPT: '로드 시도',
+
         SUCCESS: '로드 완료',
         FAIL: '로드 실패',
 

@@ -4,9 +4,11 @@ import {
 
 import { config, parse } from 'dotenv';
 import readline from 'readline';
-import { setLanguage } from '#i18n';
 
-import { MESSAGES } from '#i18n';
+import {
+    locales, setLanguage, MESSAGES
+} from '#i18n';
+
 import { DiscordBot } from '#discord';
 import { GoogleSheet } from '#google';
 import { error } from '#handler';
@@ -14,6 +16,15 @@ import { error } from '#handler';
 import * as file from '#file';
 import * as log from '#log';
 import { decode } from '#base64';
+
+function printTitle() {
+    log.title(`
+   ▄▄▄    ▄▄▄  ▄▄▄▄▄  ▄▄   ▄   ▄▄▄ 
+     █      █    █    █▀▄  █ ▄▀   ▀
+     █      █    █    █ █▄ █ █   ▄▄
+     █      █    █    █  █ █ █    █
+ ▀▄▄▄▀  ▀▄▄▄▀  ▄▄█▄▄  █   ██  ▀▄▄▄▀ 🐕`)
+}
 
 const rl = readline.createInterface({
     input: process.stdin,
@@ -28,9 +39,11 @@ let bots = new Map();
     parseEnv('.env', false);
     config({ quiet: true });
     try {
+        printTitle();
         await setupGoogles();
         await setupBots();
         await setupSoop();
+        await initialize();
     } catch (e) {
         error(e);
         initialize();
@@ -69,7 +82,7 @@ function parseEnv(name, show = true) {
     }
 }
 
-// ───────────────────────── SOOP SETUP
+// ─────────────────────────────────────── SOOP SETUP
 
 function formatTime(time) {
     return new Intl.DateTimeFormat('sv-SE', {
@@ -88,7 +101,7 @@ function formatTime(time) {
 async function setupSoop() {
 }
 
-// ───────────────────────── GOOGLE SETUP
+// ─────────────────────────────────────── GOOGLE SETUP
 
 async function setupGoogles() {
     configGoogles('config.json');
@@ -129,7 +142,7 @@ async function exitGoogles() {
 }
 
 async function renderGoogles(show = false) {
-    log.prompt('─────────────────────────\n')
+    log.prompt('───────────────────────────────────────\n')
 
     for (const [k, v] of googles) {
         const i = show ? `[${k}] ` : '';
@@ -138,10 +151,10 @@ async function renderGoogles(show = false) {
         log.prompt(`${i}${v.getName?.()} ${status}`);
     }
 
-    log.prompt('\n─────────────────────────')
+    log.prompt('\n───────────────────────────────────────')
 }
 
-// ───────────────────────── BOT SETUP
+// ─────────────────────────────────────── BOT SETUP
 
 async function setupBots() {
     configBots('config.json');
@@ -149,7 +162,10 @@ async function setupBots() {
     const s = process.env.START;
 
     if (s === '0') {
-        await startBots();
+        for (const [id, bot] of bots) {
+            await startBot(bot);
+        }
+        prompt();
         return;
     }
 
@@ -158,10 +174,9 @@ async function setupBots() {
 
     if (!isNaN(id) && bot) {
         await startBot(bot);
-        ready(bot); return;
+        prompt();
+        return;
     }
-
-    initialize();
 }
 
 function configBots(name) {
@@ -179,15 +194,14 @@ function configBots(name) {
     });
 }
 
-async function initBots(id) {
-    const old = bots.get(id);
-    if (old.isReady()) return;
+async function initBots(id, bot) {
+    if (bot.isReady()) return;
 
-    const bot = new DiscordBot();
-    bot.deploy = true;
-    bot.config(old.jjing);
+    const now = new DiscordBot();
+    now.deploy = true;
+    now.config(bot.jjing);
 
-    bots.set(id, bot);
+    bots.set(id, now);
 }
 
 async function startBot(bot) {
@@ -210,23 +224,13 @@ async function startBots() {
     for (const [id, bot] of bots) {
         await startBot(bot);
     }
-
-    const bot = [...bots.values()].at(-1);
-    
-    if (bot) { ready(bot);
-    } else { initialize(); }
 }
 
 async function stopBots() {
     for (const [id, bot] of bots) {
         await stopBot(bot);
-        initBots(id); 
+        await initBots(id, bot);
     }
-    
-    const bot = [...bots.values()].at(-1);
-    
-    if (bot) { ready(bot);
-    } else { initialize(); }
 }
 
 async function exitBots() {
@@ -236,9 +240,9 @@ async function exitBots() {
 }
 
 async function renderBots(show = false) {
-    log.prompt('─────────────────────────\n')
+    log.prompt('───────────────────────────────────────\n')
 
-    if (show && bots.length) {
+    if (show && bots.size > 0) {
         log.prompt(MESSAGES.CLI.BOTS);
     }
 
@@ -249,14 +253,15 @@ async function renderBots(show = false) {
         log.prompt(`${i}${v.getName?.()} ${status}`);
     }
 
-    log.prompt('\n─────────────────────────')
+    log.prompt('\n───────────────────────────────────────')
 }
 
 async function showBot(bot) {
-    log.prompt('─────────────────────────\n')
+    log.prompt('\n───────────────────────────────────────')
 
     const status = bot.infoStatus?.();
-    const name = bot.user?.tag || 'UNKNOWN';
+    const name = bot.user?.tag
+        || MESSAGES.STATUS.UNKNOWN;
 
     const total = Math.floor(bot.uptime / 1000);
     const hour = Math.floor(total / 3600);
@@ -266,17 +271,18 @@ async function showBot(bot) {
     const global = await bot.getGlobal?.();
     const guild = await bot.getGuild?.();
 
-    const ping = `${bot.ws.ping}ms`;
+    const wsping = bot.ws.ping;
+    const ping = `${isNaN(wsping) ? 0 : wsping}ms`;
     const uptime = `${hour}h ${min}m ${sec}s`;
 
     log.prompt(`${bot.getName?.()} ${status}`);
-    log.prompt('\n─────────────────────────')
+    log.prompt('───────────────────────────────────────')
     log.prompt(`${MESSAGES.CLI.NAME} ${name}`);
     log.prompt(`${MESSAGES.CLI.GLOBAL} ${global}`);
     log.prompt(`${MESSAGES.CLI.GUILD} ${guild}`);
     log.prompt(`${MESSAGES.CLI.PING} ${ping}`);
     log.prompt(`${MESSAGES.CLI.UPTIME} ${uptime}`);
-    log.prompt('─────────────────────────')
+    log.prompt('───────────────────────────────────────')
 }
 
 function statusBot(bot) {
@@ -288,7 +294,12 @@ function statusBot(bot) {
 
     await showBot(bot);
 
+    const timeout = setTimeout(() => {
+        rl.write('\n'); resolve();
+    }, 5000);
+
     rl.question('', (i) => {
+        clearTimeout(timeout);
         resolve();
     });
 
@@ -296,7 +307,7 @@ function statusBot(bot) {
 }
 
 async function statusBots() {
-    if (bots.size === 0) {
+    if (bots.size <= 0) {
         return initialize();
     }
 
@@ -306,12 +317,12 @@ async function statusBots() {
     
     return new Promise(async (resolve) => {
 
-    rl.question('', (i) => {
-        const bot = [...bots.values()].at(-1);
-        
-        if (bot) { ready(bot);
-        } else { initialize(); }
+    const timeout = setTimeout(() => {
+        rl.write('\n'); resolve();
+    }, 5000);
 
+    rl.question('', (i) => {
+        clearTimeout(timeout);
         resolve();
     });
 
@@ -322,42 +333,31 @@ async function refreshBots() {
     for (const [id, bot] of bots) {
         await refreshBot(bot);
     }
-    
-    const bot = [...bots.values()].at(-1);
-    
-    if (bot) { ready(bot);
-    } else { initialize(); }
 }
 
 function check(num) {
     const i = parseInt(num);
 
-    if (isNaN(i) || (i !== 0 && !bots.get(i))) {
+    if (isNaN(i) || (i !== 0
+        && !bots.get(i))) {
         return null;
     }
 
     return i;
 }
 
-// ───────────────────────── CLI
+// ─────────────────────────────────────── CLI
 
 rl.on('line', async (input) => {
     const cmd = input.trim();
-    log.input(cmd);
-    pause();
-
+    log.input(cmd); pause();
     await handler(cmd);
 });
 
 async function initialize(hide = false) {
     if (hide) log.clear();
 
-    if (process.env.START !== -1) {
-        prompt();
-        return;
-    }
-
-    log.prompt('─────────────────────────')
+    log.prompt('───────────────────────────────────────')
     log.prompt(MESSAGES.CLI.GOOGLE);
     await renderGoogles(true);
 
@@ -366,7 +366,7 @@ async function initialize(hide = false) {
 
     log.prompt(MESSAGES.CLI.COMMAND);
     log.prompt(format(MESSAGES.CLI.COMMANDS));
-    log.prompt('─────────────────────────')
+    log.prompt('───────────────────────────────────────')
 
     prompt();
 }
@@ -374,7 +374,7 @@ async function initialize(hide = false) {
 function format(commands) {
     const values = Object.values(commands);
 
-    const column = 3;
+    const column = 5;
     const rows = [];
 
     for (let i = 0; i < values.length; i += column) {
@@ -384,23 +384,27 @@ function format(commands) {
     return rows.join('\n');
 }
 
-// ───────────────────────── COMMAND
+// ─────────────────────────────────────── COMMAND
 
 async function handler(input) {
     const [cmd, arg] = input.split(' ');
 
-    switch (cmd) {
+    switch (cmd.toLowerCase()) {
 
-    case MESSAGES.CLI.COMMANDS.START: {
+    case locales.en.CLI.COMMANDS.START:
+    case locales.ko.CLI.COMMANDS.START: {
         log.cmd(MESSAGES.LOGIN.ATTEMPT);
         const i = arg ? check(arg) : await select();
         if (i === null) return initialize();
 
         try {
-            if (i === 0) await startBots();
+            if (i === 0) {
+                await startBots();
+                await lastReady();
+            }
             else {
                 await startBot(bots.get(i));
-                ready(bots.get(i));
+                await ready(bots.get(i));
             }
         } catch (e) {
             error(e);
@@ -409,12 +413,23 @@ async function handler(input) {
         break;
     }
 
-    case MESSAGES.CLI.COMMANDS.RESTART: {
+    case locales.en.CLI.COMMANDS.RESTART:
+    case locales.ko.CLI.COMMANDS.RESTART: {
         log.cmd(MESSAGES.LOGIN.RESTART);
+        const i = arg ? check(arg) : await select();
+        if (i === null) return initialize();
         try {
-            parseEnv('.env', false);
-            await stopBots();
-            await setupBots();
+            if (i === 0) {
+                await stopBots();
+                await startBots();
+                await lastReady();
+            }
+            else {
+                await stopBot(bots.get(i));
+                await initBots(i, bots.get(i));
+                await startBot(bots.get(i));
+                await ready(bots.get(i));
+            }
         } catch (e) {
             error(e);
             prompt();
@@ -422,16 +437,20 @@ async function handler(input) {
         break;
     }
 
-    case MESSAGES.CLI.COMMANDS.STOP: {
+    case locales.en.CLI.COMMANDS.STOP:
+    case locales.ko.CLI.COMMANDS.STOP: {
         log.cmd(MESSAGES.LOGOUT.ATTEMPT);
         const i = arg ? check(arg) : await select();
         if (i === null) return initialize();
         try {
-            if (i === 0) await stopBots();
+            if (i === 0) {
+                await stopBots();
+                await lastReady();
+            }
             else {
                 await stopBot(bots.get(i));
-                ready(bots.get(i));
-                initBots(i); 
+                await initBots(i, bots.get(i)); 
+                await ready(bots.get(i));
             }
         } catch (e) {
             error(e);
@@ -440,15 +459,19 @@ async function handler(input) {
         break;
     }
 
-    case MESSAGES.CLI.COMMANDS.STATUS: {
+    case locales.en.CLI.COMMANDS.STATUS:
+    case locales.ko.CLI.COMMANDS.STATUS: {
         log.cmd(MESSAGES.STATUS.ATTEMPT);
         const i = arg ? check(arg) : await select();
         if (i === null) return initialize();
         try {
-            if (i === 0) await statusBots();
+            if (i === 0) {
+                await statusBots();
+                await lastReady();
+            }
             else {
                 await statusBot(bots.get(i))
-                ready(bots.get(i));
+                await ready(bots.get(i));
             }
         } catch (e) {
             error(e);
@@ -457,7 +480,8 @@ async function handler(input) {
         break;
     }
 
-    case MESSAGES.CLI.COMMANDS.REFRESH: {
+    case locales.en.CLI.COMMANDS.REFRESH:
+    case locales.ko.CLI.COMMANDS.REFRESH: {
         log.cmd(MESSAGES.REFRESH.ATTEMPT);
         const i = arg ? check(arg) : await select();
         if (i === null) return initialize();
@@ -466,9 +490,10 @@ async function handler(input) {
             parseEnv('.env', false);
             if (i === 0) {
                 await refreshBots();
+                await lastReady();
             } else {
                 await refreshBot(bots.get(i));
-                ready(bots.get(i));
+                await ready(bots.get(i));
             }
         } catch (e) {
             error(e);
@@ -477,11 +502,13 @@ async function handler(input) {
         break;
     }
 
-    case MESSAGES.CLI.COMMANDS.CLEAR: {
+    case locales.en.CLI.COMMANDS.CLEAR:
+    case locales.ko.CLI.COMMANDS.CLEAR: {
         return initialize(true);
     }
 
-    case MESSAGES.CLI.COMMANDS.EXIT: {
+    case locales.en.CLI.COMMANDS.EXIT:
+    case locales.ko.CLI.COMMANDS.EXIT: {
         return shutdown();
     }
 
@@ -513,6 +540,16 @@ function select() {
 
 async function ready(bot) {
     if (await delay(bot)) {
+        initialize();
+    }
+}
+
+async function lastReady() {
+    const bot = [...bots.values()].at(-1);
+    
+    if (bot) {
+        ready(bot);
+    } else {
         initialize();
     }
 }

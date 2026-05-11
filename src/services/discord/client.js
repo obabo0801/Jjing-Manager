@@ -57,6 +57,8 @@ export class DiscordBot extends Client {
             handler.error(e);
         }
         
+        log.info('⏰', String(path),
+            MESSAGES.LOAD.ATTEMPT);
         await this.#read(js, path);
     }
 
@@ -80,22 +82,17 @@ export class DiscordBot extends Client {
         for (const name of files) {
             try {
                 const url = file.url(path, name);
-
                 const mod = await import(
                     `${url}?v=${Date.now()}`);
 
                 if (!mod.default) continue;
-
                 mod.default.events?.();
-                        
                 this.#register(mod.default);
 
-                log.load('⭕',
-                    file.join(path, name),
+                log.load('📄', name,
                     MESSAGES.LOAD.SUCCESS);
             } catch (e) {
-                log.error('❌',
-                    file.join(path, name),
+                log.error('📄', name,
                     MESSAGES.LOAD.FAIL);
                 handler.error(e);
             }
@@ -261,7 +258,7 @@ export class DiscordBot extends Client {
             || MESSAGES.STATUS.INVISIBLE;
     }
     
-    #changeStatus(status) {
+    async #changeStatus(status) {
         if (!status) return;
         this.user?.setPresence({status});
         log.info(this.infoStatus());
@@ -292,10 +289,8 @@ export class DiscordBot extends Client {
         log.load(MESSAGES.LOGIN.SUCCESS);
         log.info('👤', this.user.tag);
 
-        this.#changeStatus(this.getStatus())
-
-        this.#printGuild(this.getGuildId());
-
+        await this.#changeStatus(this.getStatus())
+        await this.#printGuild(this.getGuildId());
         await this.loadScripts(this.getPath());
 
         await this.deployCommands();
@@ -358,9 +353,9 @@ export class DiscordBot extends Client {
 
         if (!name) return;
         log.prompt('')
-        log.prompt('─────────────────────────')
+        log.prompt('───────────────────────────────────────')
         log.prompt(`${name}`);
-        log.prompt('─────────────────────────')
+        log.prompt('───────────────────────────────────────')
     }
 
     #errorStart(error, retry) {

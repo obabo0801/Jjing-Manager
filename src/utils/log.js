@@ -2,8 +2,9 @@ import * as file from '#file';
 import * as time from '#time';
 
 const LEVELS = Object.freeze({
-    INPUT: 'INPUT',
+    TITLE: 'TITLE',
     CMD: 'CMD',
+    INPUT: 'INPUT',
     LOAD: 'LOAD',
     DEBUG: 'DEBUG',
     INFO: 'INFO',
@@ -12,8 +13,9 @@ const LEVELS = Object.freeze({
 });
 
 const CONSOLE = Object.freeze({
-    [LEVELS.INPUT]: console.info,
+    [LEVELS.TITLE]: console.info,
     [LEVELS.CMD]: console.info,
+    [LEVELS.INPUT]: console.info,
     [LEVELS.LOAD]: console.info,
     [LEVELS.DEBUG]: console.debug,
     [LEVELS.INFO]: console.info,
@@ -22,8 +24,9 @@ const CONSOLE = Object.freeze({
 });
 
 const COLORS = Object.freeze({
-    INPUT: '\x1b[0m',
+    TITLE: '\x1b[0m',
     CMD: '\x1b[0m',
+    INPUT: '\x1b[0m',
     LOAD: '\x1b[32m',
     DEBUG: '\x1b[36m',
     INFO: '\x1b[0m',
@@ -87,12 +90,12 @@ function stringify(data) {
 
 export function clear() { console.clear() }
 
-export function silent(...args) {
-    return append(LEVELS.INFO, ...args);
+export function title(...args) {
+    return print(LEVELS.TITLE, ...args);
 }
 
-export function input(...args) {
-    return append(LEVELS.INPUT, ...args);
+export function silent(...args) {
+    return append(LEVELS.INFO, ...args);
 }
 
 export function prompt(...args) {
@@ -101,6 +104,10 @@ export function prompt(...args) {
 
 export function cmd(...args) {
     return send(LEVELS.CMD, ...args);
+}
+
+export function input(...args) {
+    return append(LEVELS.INPUT, ...args);
 }
 
 export function load(...args) {

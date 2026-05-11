@@ -1,13 +1,12 @@
 export const MESSAGES = {
-
     ENV: {
-        SUCCESS: '📄 .env loaded successfully',
-        FAIL: '📄 Failed to load .env',
+        SUCCESS: '📄 .env loaded',
+        FAIL: '📄 .env failed',
     },
 
     CLI: {
         GOOGLE: 'Google Sheets 📊',
-        DISCORD: 'Discord Bots 🎮',
+        DISCORD: 'Discord 🎮',
 
         BOTS: '[0] All',
         COMMAND: 'Commands 📝\n',
@@ -19,47 +18,46 @@ export const MESSAGES = {
             STATUS: 'status',
             REFRESH: 'refresh',
             EXIT: 'exit',
-            CLEAR: 'clear'
+            CLEAR: 'clear',
         },
 
-        NAME:   'NAME     ',
+        NAME: 'NAME     ',
         GLOBAL: 'GLOBAL   ',
-        GUILD:  'GUILD    ',
-        PING:   'PING     ',
+        GUILD: 'GUILD    ',
+        PING: 'PING     ',
         UPTIME: 'UPTIME   ',
     },
 
     LOGIN: {
-        ATTEMPT: '⏰ Attempting login.',
-        
-        RESTART: '⏰ Attempting restart.',
+        ATTEMPT: '⏰ Logging in...',
+        RESTART: '⏰ Restarting...',
 
-        RUNNING: '❗ Already running.',
-        SUCCESS: '🎮 Discord login successful',
+        RUNNING: '❗ Already running',
+        SUCCESS: '🎮 Discord login success',
         FAIL: '🎮 Discord login failed',
 
-        ENOTFOUND: '❌ No internet connection.',
-        TOKEN_UNDEFINED: '❌ Token is not defined.',
-        TOKEN_INVALID: '❌ Invalid token.',
-        DISALLOWED_INTENTS: '❌ Missing Gateway Intents permission.',
+        ENOTFOUND: '❌ No internet connection',
+        TOKEN_UNDEFINED: '❌ Token not set',
+        TOKEN_INVALID: '❌ Invalid token',
+        DISALLOWED_INTENTS: '❌ Missing intents permission',
 
-        RETRY_COUNT: (n, r, m) => `⏰ Retrying in ${n}s (${r}/${m})`,
-        RETRY_LIMIT: '❌ Retry limit exceeded.',
+        RETRY_COUNT: (n, r, m) => `⏰ Retry in ${n}s (${r}/${m})`,
+        RETRY_LIMIT: '❌ Retry limit reached',
     },
 
     LOGOUT: {
-        ATTEMPT: '⏰ Attempting logout.',
-        
-        STOPPED: '❗ Already stopped.',
-        SUCCESS: '🎮 Discord logout successful',
+        ATTEMPT: '⏰ Logging out...',
+
+        STOPPED: '❗ Already stopped',
+        SUCCESS: '🎮 Discord logout success',
         FAIL: '🎮 Discord logout failed',
     },
-    
+
     STATUS: {
-        ATTEMPT: '⏰ Checking status.',
+        ATTEMPT: '⏰ Checking status...',
 
         CONNECTED: '🟢 Connected',
-        DISCONNECTED: '🔴 Not connected',
+        DISCONNECTED: '🔴 Disconnected',
 
         ONLINE: '🟢 Online',
         IDLE: '🟡 Idle',
@@ -69,71 +67,73 @@ export const MESSAGES = {
     },
 
     GUILD: {
-        SUCCESS: '🏠 Guild registered successfully',
+        SUCCESS: '🏠 Guild registered',
         FAIL: '🏠 Guild registration failed',
 
-        UNDEFINED: '❌ Guild ID is not defined.',
-        INVALID: '❌ Invalid Guild ID.',
+        UNDEFINED: '❌ Guild ID not set',
+        INVALID: '❌ Invalid Guild ID',
     },
 
     COMMAND: {
-        ATTEMPT: '⏰ Attempting command registration',
-        
-        SUCCESS: '🌏 Commands registered successfully',
+        ATTEMPT: '⏰ Registering commands...',
+
+        SUCCESS: '🌏 Commands registered',
         FAIL: '🌏 Command registration failed',
 
-        CLIENT_UNDEFINED: '❌ Client ID is not defined.',
-        CLIENT_INVALID: '❌ Invalid Client ID.',
+        CLIENT_UNDEFINED: '❌ Client ID not set',
+        CLIENT_INVALID: '❌ Invalid Client ID',
 
-        MISSING_ACCESS: '❌ Missing access permissions.',
+        MISSING_ACCESS: '❌ Missing access permission',
     },
 
     AUTH: {
-        SUCCESS: '🔐 Google authentication successful',
-        FAIL: '🔐 Google authentication failed',
+        SUCCESS: '🔐 Google auth success',
+        FAIL: '🔐 Google auth failed',
 
-        INVALID: '❌ Unable to load authentication data',
+        INVALID: '❌ Invalid credentials',
     },
 
     SHEET: {
-        RUNNING: '❗ Already running.',
-        STOPPED: '❗ Already stopped.',
+        RUNNING: '❗ Already running',
+        STOPPED: '❗ Already stopped',
 
-        IN_SUCCESS: '📊 Sheets connected successfully',
-        IN_FAIL: '📊 Failed to connect Sheets',
-        OUT_SUCCESS: '📊 Sheets disconnected successfully',
-        OUT_FAIL: '📊 Failed to disconnect Sheets',
+        IN_SUCCESS: '📊 Sheet connected',
+        IN_FAIL: '📊 Sheet connection failed',
+        OUT_SUCCESS: '📊 Sheet disconnected',
+        OUT_FAIL: '📊 Sheet disconnect failed',
 
-        ERROR400: '❌ Bad request. (400)',
-        ERROR401: '❌ Authentication failed. (401)',
-        ERROR403: '❌ Access denied. (403)',
-        ERROR404: '❌ Requested resource not found. (404)',
-        ERROR500: '❌ Internal server error occurred. (500)',
+        ERROR400: '❌ Bad request (400)',
+        ERROR401: '❌ Unauthorized (401)',
+        ERROR403: '❌ Forbidden (403)',
+        ERROR404: '❌ Data not found (404)',
+        ERROR500: '❌ Server error (500)',
     },
 
     ERROR: {
-        BODY_INVALID: '❌ Invalid request format.',
+        BODY_INVALID: '❌ Invalid request body',
     },
 
     LOAD: {
-        SUCCESS: 'Loaded successfully',
+        ATTEMPT: 'Loading...',
+
+        SUCCESS: 'Load success',
         FAIL: 'Load failed',
 
-        NOT_FOUND: 'Folder not found!',
+        NOT_FOUND: 'Folder not found',
     },
 
     REFRESH: {
-        ATTEMPT: '⏰ Attempting refresh.',
+        ATTEMPT: '⏰ Refreshing...',
 
-        SUCCESS: '🔃 Refresh completed',
+        SUCCESS: '🔃 Refresh success',
         FAIL: '🔃 Refresh failed',
 
-        NOT_RUNNING: '❗ Server is not running.',
+        NOT_RUNNING: '❗ Server not running',
     },
 
     SYSTEM: {
-        UNKNOWN: 'is not a valid command.',
+        UNKNOWN: 'is not a valid command',
 
-        QUIT: '😢 Shutdown program.',
+        QUIT: '😢 Exiting program...',
     },
-}
+};
