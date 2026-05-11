@@ -25,9 +25,9 @@ let googles = new Map();
 let bots = new Map();
 
 (async () => {
+    parseEnv('.env', false);
+    config({ quiet: true });
     try {
-        config({ quiet: true });
-        parseEnv('.env', false);
         await setupGoogles();
         await setupBots();
         await setupSoop();
@@ -352,6 +352,11 @@ rl.on('line', async (input) => {
 async function initialize(hide = false) {
     if (hide) log.clear();
 
+    if (process.env.START !== -1) {
+        prompt();
+        return;
+    }
+
     log.prompt('─────────────────────────')
     log.prompt(MESSAGES.CLI.GOOGLE);
     await renderGoogles(true);
@@ -497,7 +502,6 @@ function select() {
 
         if (isNaN(num) || (num !== 0 && !bots.get(num))) {
             initialize();
-            prompt();
             return resolve(null);
         }
             
