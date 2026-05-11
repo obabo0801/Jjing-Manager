@@ -87,6 +87,10 @@ function stringify(data) {
 
 export function clear() { console.clear() }
 
+export function silent(...args) {
+    return append(LEVELS.INFO, ...args);
+}
+
 export function input(...args) {
     return append(LEVELS.INPUT, ...args);
 }

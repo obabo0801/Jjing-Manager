@@ -1,7 +1,6 @@
 import { google } from 'googleapis';
 
 import { MESSAGES } from '#i18n';
-import { error } from '#handler';
 import * as log from '#log';
 
 export class GoogleSheet {
@@ -49,23 +48,25 @@ export class GoogleSheet {
                 log.load(MESSAGES.SHEET.IN_SUCCESS);
             } else {
                 log.error(MESSAGES.SHEET.IN_FAIL);
-                error(sheet.error);
+                this.error(sheet.error);
             }
         } catch (e) {
             log.error(MESSAGES.AUTH.FAIL);
-            error(e);
+            this.error(e)
         }
+    }
+
+    async restart() {
+        await this.stop(true);
+        await this.start();
     }
 
     async stop(skip = false) {
         try {
             if (skip) {
-                this.cache?.clear();
-                
-                if (this.auth?.close) {
-                    await this.auth.close();
-                }
-                
+                this.cache.clear();
+                this.auth = null;
+                this.sheets = null;
                 return;
             }
 
@@ -75,18 +76,16 @@ export class GoogleSheet {
                 return log.warn(MESSAGES.SHEET.STOPPED);
             }
 
-            this.cache?.clear();
-
-            if (this.auth?.close) {
-                await this.auth.close();
-            }
+            this.cache.clear();
+            this.auth = null;
+            this.sheets = null;
 
             log.load(MESSAGES.SHEET.OUT_SUCCESS);
 
             return true;
         } catch (e) {
             log.load(MESSAGES.SHEET.OUT_FAIL);
-            error(e);
+            this.error(e);
 
             return false;
         }
@@ -145,7 +144,7 @@ export class GoogleSheet {
         const key = `${range}:${value}`;
         const cached = this.cache.get(key);
 
-        if (cache && cached && Date.now() - cached.time < 50000) {
+        if (cache && cached && Date.now() - cached.time < 5000) {
             return cached.data.map(row => [...row]);
         }
 
@@ -169,14 +168,18 @@ export class GoogleSheet {
     }
 
     async set(range, ...values) {
-        await this.sheets.spreadsheets.values.update({
-            spreadsheetId: this.getSheetId(),
-            range,
-            valueInputOption: 'USER_ENTERED',
-            requestBody: { values: [values] }
-        });
+        try {
+            await this.sheets.spreadsheets.values.update({
+                spreadsheetId: this.getSheetId(),
+                range,
+                valueInputOption: 'USER_ENTERED',
+                requestBody: { values: [values] }
+            });
 
-        this.clear(range);
+            this.clear(range);
+        } catch (e) {
+            this.error(e);
+        }
     }
 
     async find(range, col, value, options = {}) {
@@ -220,21 +223,29 @@ export class GoogleSheet {
     }
 
     async append(range, ...values) {
-        await this.sheets.spreadsheets.values.append({
-            spreadsheetId: this.getSheetId(),
-            range,
-            valueInputOption: 'USER_ENTERED',
-            requestBody: {values: [values]}
-        });
+        try {
+            await this.sheets.spreadsheets.values.append({
+                spreadsheetId: this.getSheetId(),
+                range,
+                valueInputOption: 'USER_ENTERED',
+                requestBody: {values: [values]}
+            });
+        } catch (e) {
+            this.error(e)
+        }
     }
 
     async update(range, row, ...values) {
-        await this.sheets.spreadsheets.values.update({
-            spreadsheetId: this.getSheetId(),
-            range: this.buildRange(range, row),
-            valueInputOption: 'USER_ENTERED',
-            requestBody: {values: [values]}
-        });
+        try {
+            await this.sheets.spreadsheets.values.update({
+                spreadsheetId: this.getSheetId(),
+                range: this.buildRange(range, row),
+                valueInputOption: 'USER_ENTERED',
+                requestBody: {values: [values]}
+            });
+        } catch (e) {
+            this.error(e)
+        }
     }
 
     clear(range = null) {
@@ -261,5 +272,25 @@ export class GoogleSheet {
         log.prompt('─────────────────────────')
         log.prompt(`${name}`);
         log.prompt('─────────────────────────')
+    }
+
+    error(error) {
+        const errors = [
+            [400, MESSAGES.SHEET.ERROR400],
+            [401, MESSAGES.SHEET.ERROR401],
+            [403, MESSAGES.SHEET.ERROR403],
+            [404, MESSAGES.SHEET.ERROR404],
+            [500, MESSAGES.SHEET.ERROR500],
+        ];
+        
+        for (const [code, message] of errors) {
+            if (error?.code === 500) {
+                this.restart();
+            }
+
+            if (error?.code === code) {
+                return log.error(message);
+            }
+        }
     }
 }

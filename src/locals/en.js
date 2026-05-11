@@ -108,6 +108,7 @@ export const MESSAGES = {
         ERROR401: '❌ Authentication failed. (401)',
         ERROR403: '❌ Access denied. (403)',
         ERROR404: '❌ Requested resource not found. (404)',
+        ERROR500: '❌ Internal server error occurred. (500)',
     },
 
     ERROR: {

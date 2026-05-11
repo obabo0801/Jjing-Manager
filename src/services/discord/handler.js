@@ -66,6 +66,7 @@ export function error(error) {
         [401, MESSAGES.SHEET.ERROR401],
         [403, MESSAGES.SHEET.ERROR403],
         [404, MESSAGES.SHEET.ERROR404],
+        [500, MESSAGES.SHEET.ERROR500],
     ];
 
     for (const [code, message] of errors) {
