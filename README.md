@@ -8,8 +8,6 @@
 </p>
 
 <p align="center">
-Discord Bots & Google Sheets CLI Manager
-<br>
 Node.js + discord.js + googleapis
 </p>
 
