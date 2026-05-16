@@ -1,12 +1,11 @@
 import {
     Client, GatewayIntentBits, REST, Routes
 } from 'discord.js';
-
 import { MESSAGES } from '#i18n'
-import * as handler from '#handler';
-import * as file from '#file';
-import * as log from '#log';
-import { uptime } from '#time';
+import * as handler from '#services/handler';
+import * as file from '#utils/file';
+import * as log from '#utils/log';
+import { uptime } from '#utils/time';
 
 export class DiscordBot extends Client {
 
@@ -261,7 +260,6 @@ export class DiscordBot extends Client {
                 this.emit('start');
                 return false;
             }
-
             if (!this.#getToken()) {
                 this.#undefinedToken();
             }
@@ -391,9 +389,11 @@ export class DiscordBot extends Client {
             resolve();
             return;
         }
-        log.warn(MESSAGES.LOGIN.RETRY_COUNT(
-            this.getDelay(), retry + 1,
-            this.getCount()));
+        log.warn(log.strtemplate(
+            MESSAGES.LOGIN.RETRY_COUNT, {
+            n: this.getDelay(),
+            r: retry + 1,
+            m: this.getCount()}));
         setTimeout(() => {
             this.start(retry + 1);
         }, this.getDelay() * 1000);

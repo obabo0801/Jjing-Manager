@@ -1,24 +1,28 @@
-import { DiscordBot } from '#client';
-import * as file from '#file';
+import { DiscordBot } from '#services/discord/bot';
+import * as file from '#utils/file';
+import * as config from '#utils/config';
 
 const bots = new Map();
 
 export async function setup() {
-    config('config.json');
-    const i = index();
-    if (i === 0) return startAll();
-    if (!bots.get(i)) return;
-    await start(i);
+    setting('discords');
+    const ids = index();
+    if (ids.includes(-1)) return;
+    if (ids.includes(0)) {
+        return startAll();
+    }
+    for (const id of ids) {
+        if (!sheets.get(id)) continue;
+        await start(id);
+    }
 }
 
 export const get = () => bots;
 
-export function config(name) {
+export function setting(name) {
     bots.clear();
-    const path = file.find(name);
-    if (!path) return;
-    const config = file.json(path);
-    Object.entries(config.discords ?? {})
+    Object.entries(
+        config.get()?.[name] ?? {})
         .forEach(([key, value]) => {
         const bot = new DiscordBot();
         bot.config(value);
@@ -27,7 +31,7 @@ export function config(name) {
 }
 
 export async function reload() {
-    config('config.json');
+    setting('discords');
 }
 
 export async function reset(id) {
@@ -135,10 +139,24 @@ export function wait(resolve) {
 }
 
 export function index() {
-    const str = process
-        .env.DISCORD_START;
-    if (!str) return 0;
-    const num = Number(str);
-    return isNaN(
-        num) ? -1 : num;
+    const value = process.env.DISCORD_START
+        ?? config.get()?.['discord-start'];
+    if (value === undefined) return [-1];
+    if (Array.isArray(value))
+        return value.map(Number)
+            .filter(n => !Number.isNaN(n));
+    const str = String(value).trim();
+    if (!str) return [-1];
+    if (str.startsWith('[')) {
+        try {
+            return JSON.parse(str)
+                .map(Number).filter(n =>
+                !Number.isNaN(n));
+        } catch (e) {
+            return [-1];
+        }
+    }
+    return str.split(/\s+/)
+        .map(Number)
+        .filter(n => !Number.isNaN(n));
 }

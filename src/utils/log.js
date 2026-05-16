@@ -1,5 +1,5 @@
-import * as file from '#file';
-import * as time from '#time';
+import * as file from '#utils/file';
+import * as time from '#utils/time';
 
 const LEVELS = Object.freeze({
     TITLE: 'TITLE',
@@ -88,7 +88,7 @@ function stringify(data) {
          ? v.toString() : v);
 }
 
-export function format(commands, {
+export function strformat(commands, {
     col = 6, rows = [], join = ' ', line = '\n'
     } = {}) {
     const v = Object.values(commands);
@@ -96,6 +96,12 @@ export function format(commands, {
         rows.push(v.slice(i, i + col).join(join));
     }
     return rows.join(line);
+}
+
+export function strtemplate(text, values = {}) {
+    return String(text).replace(
+        /\{(\w+)\}/g, (_, key) =>
+        values[key] ?? `{${key}}`);
 }
 
 export function clear() { console.clear() }

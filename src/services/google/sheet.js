@@ -1,8 +1,8 @@
 import { google } from 'googleapis';
 import { EventEmitter } from 'events';
 import { MESSAGES } from '#i18n';
-import * as handler from '#handler';
-import * as log from '#log';
+import * as handler from '#services/handler';
+import * as log from '#utils/log';
 
 export class GoogleSheet extends EventEmitter {
     constructor() { super();

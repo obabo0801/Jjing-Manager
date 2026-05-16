@@ -3,8 +3,8 @@
 </h1>
 
 <p align="center">
-  <img src="https://github.com/user-attachments/assets/ed957996-9b38-4afa-bf1b-5e43ff4fc8b4" width="49%">
-  <img src="https://github.com/user-attachments/assets/e7f9cbc2-b1d3-45eb-b670-8b7099b0e4ab" width="49%">
+    <img src="https://github.com/user-attachments/assets/ed957996-9b38-4afa-bf1b-5e43ff4fc8b4" width="49%">
+    <img src="https://github.com/user-attachments/assets/e7f9cbc2-b1d3-45eb-b670-8b7099b0e4ab" width="49%">
 </p>
 
 <p align="center">
@@ -14,11 +14,11 @@ Node.js + discord.js + googleapis
 ---
 
 ## 📌 소개
-Jjing Manager는 Discord Bot과 Google Sheets를  
-CLI 기반으로 제어할 수 있는 멀티 서비스 관리 프로젝트입니다.  
+Jjing Manager는 Discord Bot과 Google Sheets를    
+CLI 기반으로 제어할 수 있는 멀티 서비스 관리 프로젝트입니다.    
 
-환경 변수와 Config 설정을 통해 여러 서비스를 관리할 수 있으며  
-다국어(i18n)도 지원합니다.  
+환경 변수와 Config 설정을 통해 여러 서비스를 관리할 수 있으며    
+다국어(i18n)도 지원합니다.    
 
 ---
 
@@ -75,21 +75,7 @@ start.bat
 
 ## 🔐 .env
 - ⚠️ **절대 공개 금지**
-### 시작
-- -1 로드 없이 진행
-- 0 전체 불러오기
-- 1 [1] 번 불러오기
-```env
-DISCORD_START=0
-GOOGLE_START=0
-```
-### 언어
-- en 영어
-- ko 한국어
-```env
-LANGUAGE=ko
-```
-### 토큰
+### 디스코드 봇 토큰
 - config 설정 → `token`
 ```env
 JJING_TOKEN=YOUR_TOKEN
@@ -125,37 +111,46 @@ GOOGLE_PRIVATE_EMAIL=YOUR_EMAIL
 
 ## ⚙️ 설정
 - config.json
+### ⭐ 기본
+🔹 `discord-start` 시작    
+🔹 `google-start` 시작    
+    🔸 -1 로드 없이 진행    
+    🔸 0 전체 불러오기    
+    🔸 [1] 1번 불러오기    
+🔹 `language` 언어    
+    🔸 en 영어
+    🔸 ko 한국어
 ### 🤖 디스코드
-🔹 `1` 번호  
+🔹 `1` 번호    
 🔹 `name` 봇 이름
-🔹 `path` 폴더 경로  
+🔹 `path` 폴더 경로    
 🔹 `delay` 시간
-🔹 `count` 횟수  
-🔹 `token` `.env` 봇 토큰  
-  🔸 `"token"`: `"JJING_TOKEN"`  
-  
-🔹 `status` 봇 상태  
-  🟢 `online` 온라인
-  🟡 `idle` 자리 비움  
-  🔴 `dnd` 방해 금지
-  ⚫ `invisible` 오프라인  
-  
-🔹 `clientId` [클라이언트 ID](https://discord.com/developers/applications)  
-  🔸 `"clientId"`: `"JJING_CLIENT_ID"`  
+🔹 `count` 횟수    
+🔹 `token` `.env` 봇 토큰    
+    🔸 `"token"`: `"JJING_TOKEN"`    
+    
+🔹 `status` 봇 상태    
+    🟢 `online` 온라인
+    🟡 `idle` 자리 비움    
+    🔴 `dnd` 방해 금지
+    ⚫ `invisible` 오프라인    
+    
+🔹 `clientId` [클라이언트 ID](https://discord.com/developers/applications)    
+    🔸 `"clientId"`: `"JJING_CLIENT_ID"`    
 
-🔹 `guildId` [길드 ID](https://support-dev.discord.com/hc/ko/articles/360028717192)  
-  🔸 `"guildId"`: `"JJING_GUILD_ID"`  
+🔹 `guildId` [길드 ID](https://support-dev.discord.com/hc/ko/articles/360028717192)    
+    🔸 `"guildId"`: `"JJING_GUILD_ID"`    
 
 ### 📊 구글
-🔹 `name` 시트 이름  
-🔹 `sheetId` [구글 시트 ID](https://docs.google.com/spreadsheets/create)  
-  🔸 `"sheetId"`: `"GOOGLE_FUND_ID"`  
+🔹 `name` 시트 이름    
+🔹 `sheetId` [구글 시트 ID](https://docs.google.com/spreadsheets/create)    
+    🔸 `"sheetId"`: `"GOOGLE_FUND_ID"`    
 
-🔹 `key` [서비스 계정 키](https://docs.cloud.google.com/iam/docs/service-accounts-create)  
-  🔸 `"key"`: `"GOOGLE_PRIVATE_KEY"`  
+🔹 `key` [서비스 계정 키](https://docs.cloud.google.com/iam/docs/service-accounts-create)    
+    🔸 `"key"`: `"GOOGLE_PRIVATE_KEY"`    
 
-🔹 `email` [서비스 계정 이메일](https://docs.cloud.google.com/iam/docs/service-account-types)  
-  🔸 `"email"`: `"GOOGLE_PRIVATE_EMAIL"`  
+🔹 `email` [서비스 계정 이메일](https://docs.cloud.google.com/iam/docs/service-account-types)    
+    🔸 `"email"`: `"GOOGLE_PRIVATE_EMAIL"`    
 
 ---
 

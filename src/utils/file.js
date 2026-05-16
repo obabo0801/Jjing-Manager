@@ -23,6 +23,7 @@ export function join(...args) {
 }
 
 export function find(name) {
+    if (exists(name)) return name;
     return dir('.').filter(f =>
         path.basename(f) === name)
         .map(get)[0] || null;

@@ -1,4 +1,8 @@
 {
+    "discord-start": 0,
+    "google-start": 2,
+    "language": "ko",
+    
     "discords": {
 
         "1": {

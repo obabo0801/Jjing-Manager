@@ -1,12 +1,16 @@
-import * as en from './en.js';
-import * as ko from './ko.js';
+import * as file from '#utils/file';
 
 export const locales = {
-    en : en.MESSAGES,
-    ko : ko.MESSAGES
+    en : load('./src/_locals/en'),
+    ko : load('./src/_locals/ko')
 }
 
 export let MESSAGES = locales.en;
+
+function load(lang) {
+    const path = file.find(`${lang}.json`);
+    return path ? file.json(path) : {};
+}
 
 export function getLanguage() {
     return MESSAGES || locales.en;

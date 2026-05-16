@@ -1,5 +1,5 @@
 import { MESSAGES } from '#i18n'
-import * as log from '#log';
+import * as log from '#utils/log';
 
 const handlers = [];
 

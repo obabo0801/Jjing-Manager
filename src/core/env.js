@@ -1,14 +1,20 @@
 import { parse } from 'dotenv';
-import * as file from '#file';
-import * as log from '#log';
-import { decode } from '#base64';
 import { setLanguage, MESSAGES } from '#i18n';
-import * as handler from '#handler';
+import * as handler from '#services/handler';
+import { decode } from '#utils/base64';
+import * as file from '#utils/file';
+import * as log from '#utils/log';
+import * as config from '#utils/config';
 
 export function parseEnv(name, show = true) {
     try {
         const path = file.find(name);
-        if (!path) return;
+
+        if (!path) {
+            setLanguage(process.env.LANGUAGE ??
+                config.get()?.['language']);
+            return;
+        }
 
         const env = file.read(path);
         const parsed = parse(decode(env));
@@ -25,7 +31,8 @@ export function parseEnv(name, show = true) {
             }
         }
 
-        setLanguage(process.env.LANGUAGE);
+        setLanguage(process.env.LANGUAGE ??
+            config.get()?.['language']);
 
         if (show) {
             log.load(MESSAGES.ENV.SUCCESS);

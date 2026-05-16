@@ -1,9 +1,9 @@
-import readline from 'readline';
-import { config } from 'dotenv';
-import { parseEnv } from '#env';
-import * as log from '#log';
-import { locales, MESSAGES } from '#i18n';
 import { spawn } from 'child_process';
+import readline from 'readline';
+import { locales, MESSAGES } from '#i18n';
+import { parseEnv } from '#core/env';
+import * as config from '#utils/config';
+import * as log from '#utils/log';
 
 let services = [];
 
@@ -23,7 +23,7 @@ const rl = readline.createInterface({
 
 export async function start(items) {
     services = items;
-    config({ quiet: true });
+    config.load('./config.json');
     showTitle();
     pause();
     await setup(services);
@@ -32,6 +32,7 @@ export async function start(items) {
 }
 
 export async function reload(items) {
+    config.load('./config.json');
     parseEnv('.env', false);
     for (const [id, item] of items.entries()) {
         if (!item.ref) continue;
@@ -40,6 +41,7 @@ export async function reload(items) {
 }
 
 export async function setup(items) {
+    config.load('./config.json');
     parseEnv('.env', false);
     for (const [id, item] of items.entries()) {
         if (!item.ref) continue;
@@ -95,28 +97,26 @@ function indexInfo(item) {
         ([key, value]) => ({ key, value }));
 }
 
-function showMenu(items) {
-    const selected = indexMenu(items);
+function showMenu(items, single = null) {
+    const selected = indexMenu(items, single);
     if (selected.length === 0) return;
-
     showZero();
-
     for (let i = 0; i < selected.length; i++) {
         log.prompt(`${i + 1}.`, name(selected[i].value));
     }
 }
 
-function indexMenu(items) {
-    return items.map(
-        (value, key) => ({ key, value }))
-        .filter(
-        ({ value }) => value.ref && hasList(value));
+function indexMenu(items, single = null) {
+    return items.map((value, key) =>
+        ({ key, value })).filter(({ value }) =>
+        value.ref && hasList(value)
+        && (!single || hasMethod(value, single)));
 }
 
 function showHelp() {
     showLine();
     log.prompt(MESSAGES.CLI.COMMAND);
-    log.prompt(log.format(MESSAGES.CLI.COMMANDS));
+    log.prompt(log.strformat(MESSAGES.CLI.COMMANDS));
     showLine();
 }
 
@@ -136,6 +136,10 @@ function list(item) {
     return item.ref?.get?.();
 }
 
+function hasMethod(item, method) {
+    return typeof item.ref?.[method] === 'function';
+}
+
 function hasList(item) {
     return list(item)?.size > 0;
 }
@@ -146,19 +150,22 @@ function hasService() {
 }
 
 async function selectMenu(all, single) {
+    const selected = indexMenu(services, single);
+    if (selected.length === 0) {
+        await invalid();
+        return;
+    }
+    
     showLine();
-    await showMenu(services);
+    showMenu(services, single);
     showLine();
     const input = await wait(resolve => {
         rl.question('', resolve);
     });
     pause();
-    const [i1, ...i2] = input.split(/\s+/);
-    const index = Number(i1);
-    const args = [...new Set(i2.map(Number))];
-    const selected = select(index);
-    const target = selected?.value;
-    if (Number.isNaN(index)) {
+    const values = parse(input);
+    const [index, ...args] = values;
+    if (index === undefined || Number.isNaN(index)) {
         await invalid();
         return;
     }
@@ -166,6 +173,7 @@ async function selectMenu(all, single) {
         await service(all, single, 0);
         return;
     }
+    const target = select(index, single)?.value;
     if (!target) {
         await cancel();
         return;
@@ -173,6 +181,10 @@ async function selectMenu(all, single) {
     log.cmd(name(target));
     if (args.length > 0) {
         await service(all, single, index, ...args);
+        return;
+    }
+    if (!hasMethod(target, single)) {
+        await service(all, single, index);
         return;
     }
     await selectInfo(all, single, index, target);
@@ -185,13 +197,22 @@ async function selectInfo(all, single, index, target) {
         rl.question('', resolve);
     });
     pause();
-    const args = [...new Set(
-        input.split(/\s+/).map(Number))];
+    const args = parse(input);
     if (args.length === 0) {
         await invalid();
         return;
     }
     await service(all, single, index, ...args);
+}
+
+function parse(input) {
+    if (!input.trim()) {
+        return [];
+    }
+    return [...new Set(
+        input.trim()
+        .split(/\s+/)
+        .map(Number))];
 }
 
 async function service(all, single, index, ...args) {
@@ -203,7 +224,7 @@ async function service(all, single, index, ...args) {
         }
         return;
     }
-    if (Number.isNaN(index)) {
+    if (index === undefined || Number.isNaN(index)) {
         await selectMenu(all, single);
         return;
     }
@@ -217,15 +238,22 @@ async function service(all, single, index, ...args) {
         await done();
         return;
     }
-    const selected = select(index);
-    const target = selected?.value;
+    const target = select(index, single)?.value;
     if (!target?.ref) {
         await invalid();
         return;
     }
     if (args.length === 0 || args.includes(0)) {
+        if (!hasMethod(target, all)) {
+            await invalid();
+            return;
+        }
         await target.ref?.[all]?.();
         await done();
+        return;
+    }
+    if (!hasMethod(target, single)) {
+        await invalid();
         return;
     }
     const valid = validate(target, args);
@@ -247,9 +275,8 @@ function validate(target, args) {
 }
 
 async function handler(input) {
-    const [cmd, i1, ...i2] = input.split(' ');
-    const index = Number(i1);
-    const args = [...new Set(i2.map(Number))];
+    const [cmd, ...rest] = input.trim().split(/\s+/);
+    const [index, ...args] = parse(rest.join(' '));
 
     switch (cmd.toLowerCase()) {
 
@@ -325,8 +352,10 @@ async function handler(input) {
     }
 }
 
-function select(index) {
-    return indexMenu(services)[index - 1] ?? null;
+function select(index, single = null) {
+    return indexMenu(
+        services, single
+    )[index - 1] ?? null;
 }
 
 async function cancel() {

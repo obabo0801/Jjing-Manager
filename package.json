@@ -1,44 +1,32 @@
 {
-  "name": "jjing-manager",
-  "version": "1.0.0",
-  "description": "Node.js CLI 멀티 서비스 관리 프로젝트",
-  "homepage": "https://github.com/obabo0801/Jjing-Manager#readme",
-  "bugs": {
-    "url": "https://github.com/obabo0801/Jjing-Manager/issues"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/obabo0801/Jjing-Manager.git"
-  },
-  "license": "MIT",
-  "author": "unjongjjing",
-  "type": "module",
-  "main": "index.js",
-  "scripts": {
-    "start": "node src/index.js"
-  },
-  "dependencies": {
-    "discord.js": "^14.26.4",
-    "dotenv": "^17.4.2",
-    "googleapis": "^171.4.0",
-    "soop-extension": "^1.3.3"
-  },
-  "imports": {
-    "#cli": "./src/core/cli.js",
-    "#env": "./src/core/env.js",
-    
-    "#i18n": "./src/locals/index.js",
-    
-    "#discord": "./src/services/discord/index.js",
-    "#client": "./src/services/discord/client.js",
-    "#handler": "./src/services/discord/handler.js",
-
-    "#google": "./src/services/google/index.js",
-    "#sheet": "./src/services/google/sheet.js",
-
-    "#base64": "./src/utils/base64.js",
-    "#file": "./src/utils/file.js",
-    "#log": "./src/utils/log.js",
-    "#time": "./src/utils/time.js"
-  }
+    "name": "jjing-manager",
+    "version": "1.0.0",
+    "description": "Node.js CLI 멀티 서비스 관리 프로젝트",
+    "homepage": "https://github.com/obabo0801/Jjing-Manager#readme",
+    "bugs": {
+        "url": "https://github.com/obabo0801/Jjing-Manager/issues"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/obabo0801/Jjing-Manager.git"
+    },
+    "license": "MIT",
+    "author": "unjongjjing",
+    "type": "module",
+    "main": "index.js",
+    "scripts": {
+        "start": "node src/index.js"
+    },
+    "imports": {
+        "#services/*": "./src/services/*.js",
+        "#core/*": "./src/core/*.js",
+        "#utils/*": "./src/utils/*.js",
+        "#i18n": "./src/_locals/index.js"
+    },
+    "dependencies": {
+        "discord.js": "^14.26.4",
+        "dotenv": "^17.4.2",
+        "googleapis": "^171.4.0",
+        "soop-extension": "^1.3.3"
+    }
 }

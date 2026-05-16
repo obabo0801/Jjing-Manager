@@ -1,6 +1,8 @@
-import { SlashCommandBuilder } from 'discord.js';
-import { on } from '#handler';
-import * as log from '#log';
+import {
+    SlashCommandBuilder
+} from 'discord.js';
+import { on } from '#services/handler';
+import * as log from '#utils/log';
 
 export default {
     name: 'example',
