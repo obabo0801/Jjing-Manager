@@ -181,6 +181,7 @@ export class GoogleSheet extends EventEmitter {
 
     async isReady() {
         try {
+            if (!this.sheets) return { ok: false };
             const r = await this.sheets.spreadsheets.get({
                 spreadsheetId: this.getSheetId()
             });
@@ -248,6 +249,9 @@ export class GoogleSheet extends EventEmitter {
         const target = this.normalize(options.value);
         const index = rows.findIndex(row => 
             this.normalize(row[options.col]) === target
+        );
+        const index = rows.findIndex(row =>
+            this.normalize(row[col]) === target
         );
         return index === -1
             ? { result: null, row: null }

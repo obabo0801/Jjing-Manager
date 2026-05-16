@@ -18,7 +18,7 @@ export function config(name) {
     const path = file.find(name);
     if (!path) return;
     const config = file.json(path);
-    Object.entries(config.discords)
+    Object.entries(config.discords ?? {})
         .forEach(([key, value]) => {
         const bot = new DiscordBot();
         bot.config(value);

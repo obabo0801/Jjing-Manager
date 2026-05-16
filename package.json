@@ -1,14 +1,14 @@
 {
-  "name": "jjing-bot",
+  "name": "jjing-manager",
   "version": "1.0.0",
-  "description": "확장 가능한 디스코드 봇",
-  "homepage": "https://github.com/obabo0801/Jjing-Bot#readme",
+  "description": "CLI 멀티 서비스 관리 프로젝트",
+  "homepage": "https://github.com/obabo0801/Jjing-Manager#readme",
   "bugs": {
-    "url": "https://github.com/obabo0801/Jjing-Bot/issues"
+    "url": "https://github.com/obabo0801/Jjing-Manager/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/obabo0801/Jjing-Bot.git"
+    "url": "git+https://github.com/obabo0801/Jjing-Manager.git"
   },
   "license": "MIT",
   "author": "unjongjjing",

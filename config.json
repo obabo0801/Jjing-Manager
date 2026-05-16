@@ -17,15 +17,15 @@
 
         "1": {
             "name": "회사 정보 ⭐",
-            "email": "GOOGLE_MAIN_EMAIL",
-            "key": "GOOGLE_MAIN_KEY",
+            "email": "GOOGLE_PRIVATE_EMAIL",
+            "key": "GOOGLE_PRIVATE_KEY",
             "sheetId": "GOOGLE_MAIN_ID"
         },
 
         "2": {
             "name": "회사 공금 🏢",
-            "email": "GOOGLE_FUND_EMAIL",
-            "key": "GOOGLE_FUND_KEY",
+            "email": "GOOGLE_PRIVATE_EMAIL",
+            "key": "GOOGLE_PRIVATE_KEY",
             "sheetId": "GOOGLE_FUND_ID"
         }
     }

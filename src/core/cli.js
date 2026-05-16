@@ -164,7 +164,8 @@ async function selectMenu(all, single) {
     const [i1, ...i2] = input.split(/\s+/);
     const index = Number(i1);
     const args = [...new Set(i2.map(Number))];
-    const target = select(index);
+    const selected = select(index);
+    const target = selected?.value;
     if (Number.isNaN(index)) {
         await invalid();
         return;
@@ -224,7 +225,8 @@ async function service(all, single, index, ...args) {
         await done();
         return;
     }
-    const target = select(index);
+    const selected = select(index);
+    const target = selected?.value;
     if (!target?.ref) {
         await invalid();
         return;
@@ -332,8 +334,7 @@ async function handler(input) {
 }
 
 function select(index) {
-    const selected = indexMenu(services)[index - 1];
-    return selected?.value;
+    return indexMenu(services)[index - 1] ?? null;
 }
 
 async function cancel() {

@@ -18,7 +18,7 @@ export function config(name) {
     const path = file.find(name);
     if (!path) return;
     const config = file.json(path);
-    Object.entries(config.googles)
+    Object.entries(config.googles ?? {})
         .forEach(([key, value]) => {
         const sheet = new GoogleSheet();
         sheet.config(value);

@@ -12,7 +12,7 @@ export function getLanguage() {
     return MESSAGES || locales.en;
 }
 
-export function setLanguage(lang) {
+export function setLanguage(lang = 'en') {
     const languages = {
         en: locales.en,
         eng: locales.en,
@@ -24,6 +24,6 @@ export function setLanguage(lang) {
     };
 
     MESSAGES = languages[
-        lang.trim().toLowerCase()
+        String(lang).trim().toLowerCase()
     ] ?? locales.en;
 }

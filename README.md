@@ -14,8 +14,8 @@ Node.js + discord.js + googleapis
 ---
 
 ## 📌 소개
-Jjing Manager는 Discord bots 와 Google sheets 를 CLI 으로  
-제어할 수 있는 멀티 서비스 관리 프로젝트입니다.  
+Jjing Manager는 Discord Bot과 Google Sheets를  
+CLI 기반으로 제어할 수 있는 멀티 서비스 관리 프로젝트입니다.  
 
 환경 변수와 Config 설정을 통해 여러 서비스를 관리할 수 있으며  
 다국어(i18n)도 지원합니다.  
@@ -113,12 +113,12 @@ GOOGLE_FUND_ID=YOUR_ID
 ### 구글 서비스 키
 - config 설정 → `key`
 ```env
-GOOGLE_FUND_KEY=YOUR_KEY
+GOOGLE_PRIVATE_KEY=YOUR_KEY
 ```
 ### 구글 서비스 이메일
 - config 설정 → `email`
 ```env
-GOOGLE_FUND_EMAIL=YOUR_EMAIL
+GOOGLE_PRIVATE_EMAIL=YOUR_EMAIL
 ```
 
 ---
@@ -152,10 +152,10 @@ GOOGLE_FUND_EMAIL=YOUR_EMAIL
   🔸 `"sheetId"`: `"GOOGLE_FUND_ID"`  
 
 🔹 `key` [서비스 계정 키](https://docs.cloud.google.com/iam/docs/service-accounts-create)  
-  🔸 `"key"`: `"GOOGLE_FUND_KEY"`  
+  🔸 `"key"`: `"GOOGLE_PRIVATE_KEY"`  
 
 🔹 `email` [서비스 계정 이메일](https://docs.cloud.google.com/iam/docs/service-account-types)  
-  🔸 `"email"`: `"GOOGLE_FUND_EMAIL"`  
+  🔸 `"email"`: `"GOOGLE_PRIVATE_EMAIL"`  
 
 ---
 
