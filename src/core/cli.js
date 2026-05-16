@@ -116,7 +116,7 @@ function indexMenu(items) {
 function showHelp() {
     showLine();
     log.prompt(MESSAGES.CLI.COMMAND);
-    log.prompt(format(MESSAGES.CLI.COMMANDS));
+    log.prompt(log.format(MESSAGES.CLI.COMMANDS));
     showLine();
 }
 
@@ -130,14 +130,6 @@ function showLine() {
 
 function name(item) {
     return MESSAGES.CLI[item.name] ?? item.name;
-}
-
-function format(commands, col = 6, rows = []) {
-    const v = Object.values(commands);
-    for (let i = 0; i < v.length; i += col) {
-        rows.push(v.slice(i, i + col).join(' '));
-    }
-    return rows.join('\n');
 }
 
 function list(item) {
@@ -380,9 +372,12 @@ export function wait(resolve) {
 
 export async function shutdown() {
     log.cmd(MESSAGES.SYSTEM.QUIT);
+    pause();
     for (const service of services) {
         await service.ref?.exitAll?.();
-    }; close(); process.exit(0);
+    }
+    close();
+    process.exit(0);
 }
 
 rl.on('line', async (input) => {

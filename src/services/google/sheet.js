@@ -9,6 +9,7 @@ export class GoogleSheet extends EventEmitter {
         this.cache = new Map();
         this.auth = null;
         this.sheets = null;
+        this.names = null;
     }
 
     config(options = {}) {
@@ -41,6 +42,7 @@ export class GoogleSheet extends EventEmitter {
             log.load(MESSAGES.AUTH.SUCCESS);
             sheet = await this.isReady();
             if (sheet.ok) {
+                this.#setSheet(sheet.result);
                 log.load(MESSAGES.SHEET.IN_SUCCESS);
             } else {
                 this.#undefinedSheet();
@@ -104,7 +106,7 @@ export class GoogleSheet extends EventEmitter {
             log.prompt(MESSAGES.CLI.STATUS,
                 await this.infoStatus());
             log.prompt(MESSAGES.CLI.SHEETS,
-                sheet.result?.data?.sheets?.length);
+                this.getSheet().length);
             log.prompt(MESSAGES.CLI.CACHE,
                 this.cache.size);
             log.load(MESSAGES.STATUS.SUCCESS);
@@ -132,6 +134,7 @@ export class GoogleSheet extends EventEmitter {
                 version: 'v4',
                 auth: this.auth
             })
+            this.#setSheet(sheet.result);
             log.load(MESSAGES.REFRESH.SUCCESS);
             await this.emit('refresh');
             return true;
@@ -159,8 +162,47 @@ export class GoogleSheet extends EventEmitter {
         return process.env[this.sheetId] || this.sheetId;
     }
 
+    getSheet() {
+        return [...this.names];
+    }
+
+    #setSheet(result) {
+        this.names = result?.data?.sheets
+            ?.map(sheet => sheet.properties?.title)
+            .filter(Boolean) ?? [];
+    }
+
+    hasSheet(name) {
+        return this.names.includes(name);
+    }
+
+    resolveSheet(name) {
+        const target = this.normalize(name);
+
+        return this.names.find(sheet =>
+            this.normalize(sheet) === target
+        ) ?? this.names.find(sheet =>
+            this.normalize(sheet).startsWith(target)
+        ) ?? this.names.find(sheet =>
+             this.normalize(sheet).includes(target)
+        ) ?? name;
+    }
+
+    resolveRange(range) {
+        const text = String(range);
+        if (!text.includes('!')) {
+            return this.resolveSheet(text);
+        }
+        const [name, value] = text.split('!');
+        const sheet = this.resolveSheet(name);
+        return `${sheet}!${value}`;
+    }
+
     normalize(value) {
         return String(value ?? '').trim();
+
+        const name = this.resolveSheetName(name);
+        return `${this.escapeSheetName(sheetName)}!${value}`;
     }
 
     buildRange(range, row) {
@@ -192,6 +234,7 @@ export class GoogleSheet extends EventEmitter {
     }
 
     async get(range, { value = 'FORMATTED_VALUE', cache = true } = {}) {
+        range = this.resolveRange(range);
         const key = `${range}:${value}`;
         const cached = this.cache.get(key);
         if (cache && cached && Date.now() - cached.time < 50000) {
@@ -215,6 +258,7 @@ export class GoogleSheet extends EventEmitter {
     }
 
     async set(range, ...values) {
+        range = this.resolveRange(range);
         try {
             await this.sheets.spreadsheets.values.update({
                 spreadsheetId: this.getSheetId(),
@@ -228,14 +272,6 @@ export class GoogleSheet extends EventEmitter {
         }
     }
 
-    async find(range, col, value, options = {}) {
-        const rows = await this.get(range, options);
-        const target = this.normalize(value);
-        return rows.find(row => 
-            this.normalize(row[col]) === target
-        ) ?? null;
-    }
-
     async find(range, { col = 0, value = '', options = {} } = {}) {
         const rows = await this.get(range, options);
         const target = this.normalize(value);
@@ -244,12 +280,9 @@ export class GoogleSheet extends EventEmitter {
         ) ?? null;
     }
 
-    async index(range, options = {}) {
+    async index(range, { col = 0, value = '', options = {} } = {}) {
         const rows = await this.get(range, options);
-        const target = this.normalize(options.value);
-        const index = rows.findIndex(row => 
-            this.normalize(row[options.col]) === target
-        );
+        const target = this.normalize(value);
         const index = rows.findIndex(row =>
             this.normalize(row[col]) === target
         );
@@ -258,15 +291,8 @@ export class GoogleSheet extends EventEmitter {
             : { result, row: rows[index] };
     }
 
-    async index(range, { col = 0, value = '', options = {} } = {}) {
-        const rows = await this.get(range, options);
-        const target = this.normalize(value);
-        return rows.find(row => 
-            this.normalize(row[col]) === target
-        ) ?? null;
-    }
-
     async append(range, ...values) {
+        range = this.resolveRange(range);
         try {
             await this.sheets.spreadsheets.values.append({
                 spreadsheetId: this.getSheetId(),
@@ -280,6 +306,7 @@ export class GoogleSheet extends EventEmitter {
     }
 
     async update(range, row, ...values) {
+        range = this.resolveRange(range);
         try {
             await this.sheets.spreadsheets.values.update({
                 spreadsheetId: this.getSheetId(),
@@ -297,6 +324,7 @@ export class GoogleSheet extends EventEmitter {
             this.cache.clear();
             this.auth = null;
             this.sheets = null;
+            this.names = null;
             return;
         }
         for (const key of this.cache.keys()) {

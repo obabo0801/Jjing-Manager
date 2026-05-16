@@ -88,6 +88,16 @@ function stringify(data) {
          ? v.toString() : v);
 }
 
+export function format(commands, {
+    col = 6, rows = [], join = ' ', line = '\n'
+    } = {}) {
+    const v = Object.values(commands);
+    for (let i = 0; i < v.length; i += col) {
+        rows.push(v.slice(i, i + col).join(join));
+    }
+    return rows.join(line);
+}
+
 export function clear() { console.clear() }
 
 export function title(...args) {

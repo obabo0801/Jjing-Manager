@@ -1,7 +1,7 @@
 {
   "name": "jjing-manager",
   "version": "1.0.0",
-  "description": "CLI 멀티 서비스 관리 프로젝트",
+  "description": "Node.js CLI 멀티 서비스 관리 프로젝트",
   "homepage": "https://github.com/obabo0801/Jjing-Manager#readme",
   "bugs": {
     "url": "https://github.com/obabo0801/Jjing-Manager/issues"

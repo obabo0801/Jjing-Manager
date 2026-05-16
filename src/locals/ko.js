@@ -9,7 +9,7 @@ export const MESSAGES = {
         ALL: '전체 🍀',
 
         GOOGLE: '구글 시트 📊',
-        DISCORD: '디스코드 🎮',
+        DISCORD: '디스코드 봇 🎮',
 
         COMMAND: '명령어 📝\n',
 
