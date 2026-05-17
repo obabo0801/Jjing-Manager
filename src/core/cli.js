@@ -221,7 +221,7 @@ function number(value) {
 }
 
 async function textCommand(all, single, rest,
-    { attempt = single, input = ''} = {}) {
+    { attempt = single, input = '', print = true } = {}) {
     if (hasService()) {
         log.cmd(attempt);
     }
@@ -272,8 +272,14 @@ async function textCommand(all, single, rest,
         if (!text) return;
     }
     const values = await target.ref[single](id, text);
-    if (!printRows(values)) {
+    if (print && !printRows(values)) {
         log.warn(MESSAGES.SHEET.ERROR404);
+        await initialize();
+        prompt();
+        return;
+    }
+    if (!print && values === false) {
+        log.warn(MESSAGES.SHEET.ERROR400);
         await initialize();
         prompt();
         return;
@@ -408,6 +414,22 @@ async function handler(input) {
         await textCommand('list', 'read', rest, {
             attempt: MESSAGES.READ.ATTEMPT,
             input: MESSAGES.READ.INPUT});
+        break;
+    }
+
+    case locales.en.CLI.COMMANDS.WRITE:
+    case locales.ko.CLI.COMMANDS.WRITE: {
+        await textCommand('list', 'write', rest, {
+            attempt: MESSAGES.WRITE.ATTEMPT,
+            input: MESSAGES.WRITE.INPUT});
+        break;
+    }
+
+    case locales.en.CLI.COMMANDS.APPEND:
+    case locales.ko.CLI.COMMANDS.APPEND: {
+        await textCommand('list', 'append', rest, {
+            attempt: MESSAGES.APPEND.ATTEMPT,
+            input: MESSAGES.APPEND.INPUT});
         break;
     }
 

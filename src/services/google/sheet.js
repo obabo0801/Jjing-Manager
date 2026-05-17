@@ -288,8 +288,10 @@ export class GoogleSheet extends EventEmitter {
                 requestBody: { values: [values] }
             });
             this.clear(range);
+            return true;
         } catch (e) {
             await this.#handleError(e, { show: false });
+            return false;
         }
     }
 
@@ -321,8 +323,10 @@ export class GoogleSheet extends EventEmitter {
                 valueInputOption: 'USER_ENTERED',
                 requestBody: {values: [values]}
             });
+            return true;
         } catch (e) {
             await this.#handleError(e, { show: false });
+            return false;
         }
     }
 
@@ -335,8 +339,10 @@ export class GoogleSheet extends EventEmitter {
                 valueInputOption: 'USER_ENTERED',
                 requestBody: {values: [values]}
             });
+            return true;
         } catch (e) {
             await this.#handleError(e, { show: false });
+            return false;
         }
     }
 

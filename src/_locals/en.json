@@ -14,6 +14,8 @@
 
         "COMMANDS": {
             "READ": "read",
+            "WRITE": "write",
+            "APPEND": "append",
             "START": "start",
             "RESTART": "restart",
             "STOP": "stop",
@@ -38,6 +40,16 @@
 
     "READ": {
         "ATTEMPT": "⏰ Reading...",
+        "INPUT": "📄 Enter content"
+    },
+
+    "WRITE": {
+        "ATTEMPT": "⏰ Writing...",
+        "INPUT": "📄 Enter content"
+    },
+
+    "APPEND": {
+        "ATTEMPT": "⏰ Appending...",
         "INPUT": "📄 Enter content"
     },
 

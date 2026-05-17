@@ -14,6 +14,8 @@
 
         "COMMANDS": {
             "READ": "읽기",
+            "WRITE": "쓰기",
+            "APPEND": "추가",
             "START": "시작",
             "RESTART": "재시작",
             "STOP": "중지",
@@ -38,6 +40,16 @@
 
     "READ": {
         "ATTEMPT": "⏰ 읽기를 시도합니다.",
+        "INPUT": "📄 내용을 입력해주세요."
+    },
+
+    "WRITE": {
+        "ATTEMPT": "⏰ 쓰기를 시도합니다.",
+        "INPUT": "📄 내용을 입력해주세요."
+    },
+
+    "APPEND": {
+        "ATTEMPT": "⏰ 추가를 시도합니다.",
         "INPUT": "📄 내용을 입력해주세요."
     },
 

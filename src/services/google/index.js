@@ -58,6 +58,24 @@ export async function read(id, range = '') {
     return await sheet.get(range);
 }
 
+export async function write(id, text = '') {
+    const sheet = sheets.get(id);
+    if (!sheet) return false;
+    const parsed = parseValues(text);
+    if (!parsed) return false;
+    return await sheet.set(
+        parsed.range, ...parsed.values);
+}
+
+export async function append(id, text = '') {
+    const sheet = sheets.get(id);
+    if (!sheet) return false;
+    const parsed = parseValues(text);
+    if (!parsed) return false;
+    return await sheet.append(
+        parsed.range, ...parsed.values);
+}
+
 export async function start(id) {
     const sheet = sheets.get(id);
     if (!sheet) return;
@@ -171,4 +189,13 @@ export function index() {
     return str.split(/\s+/)
         .map(Number)
         .filter(n => !Number.isNaN(n));
+}
+
+function parseValues(text = '') {
+    const [range, ...rest] = String(
+        text).trim().split(/\s+/);
+    const value = rest.join(' ');
+    if (!range || !value) return null;
+    return { range, values: value.split(
+        '|').map(v => v.trim())};
 }
