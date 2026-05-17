@@ -155,6 +155,7 @@ GOOGLE_PRIVATE_EMAIL=YOUR_EMAIL
 ---
 
 ## ⌨️ CLI 명령어
+- `read` 읽기
 - `start` 시작
 - `restart` 재시작
 - `stop` 중지
