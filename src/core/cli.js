@@ -23,30 +23,24 @@ const rl = readline.createInterface({
 
 export async function start(items) {
     services = items;
-    config.load('./config.json');
+    loadConfig();
     showTitle();
     pause();
-    await setup(services);
+    await callItems(services, 'setup');
     await initialize(false);
     prompt();
 }
 
-export async function reload(items) {
-    config.load('./config.json');
-    parseEnv('.env', false);
-    for (const [id, item] of items.entries()) {
-        if (!item.ref) continue;
-        await item.ref.reload();
-    }
+export async function reload(items = service) {
+    services = items;
+    loadConfig();
+    await callItems(service, 'reload');
 }
 
-export async function setup(items) {
-    config.load('./config.json');
-    parseEnv('.env', false);
-    for (const [id, item] of items.entries()) {
-        if (!item.ref) continue;
-        await item.ref.setup();
-    }
+export async function setup(items = service) {
+    services = items;
+    loadConfig();
+    await callItems(service, 'setup');
 }
 
 export async function reboot() {
@@ -60,63 +54,70 @@ export async function reboot() {
 }
 
 export async function initialize(title = true) {
-    if (title) {
-        showTitle();
-    }
+    if (title) showTitle();
     await showInfo(services);
-    showMenu(services);
+    showMenu(indexMenu(services), null, true);
     showHelp();
+}
+
+export async function shutdown() {
+    log.cmd(MESSAGES.SYSTEM.QUIT);
+    pause();
+    for (const service of services) {
+        await service.ref?.exitAll?.();
+    }
+    close();
+    process.exit(0);
+}
+
+function loadConfig() {
+    config.load('./config.json');
+    parseEnv('.env', false);
+}
+
+async function callItems(items, method) {
+    for (const item of items) {
+        if (!item.ref?.[method]) continue;
+        await item.ref[method]();
+    }
 }
 
 function showTitle() {
     log.title(TITLE);
 }
 
-async function showInfo(items, zero = false) {
+async function showInfo(items, all = null, zero = false) {
     const selected = items.filter(hasList);
     if (selected.length === 0) return;
-
     showLine();
-
     for (const item of selected) {
         log.prompt(name(item));
         showLine();
-
-        if (zero) showZero();
-
-        for (const { key } of indexInfo(item)) {
+        if (zero || (all && hasMethod(item, all))) {
+            showZero();
+        }
+        for (const key of indexInfo(item)) {
             log.prompt(await item.ref.info(key, true));
         }
-
         showLine();
     }
 }
 
-function indexInfo(item) {
-    return [...item.ref.get().entries()].map(
-        ([key, value]) => ({ key, value }));
-}
-
-function showMenu(items, single = null) {
-    const selected = indexMenu(items, single);
+function showMenu(selected, all = null, zero = false) {
     if (selected.length === 0) return;
-    showZero();
+    if (zero || hasAll(selected, all)) {
+        showZero();
+    }
     for (let i = 0; i < selected.length; i++) {
         log.prompt(`${i + 1}.`, name(selected[i].value));
     }
 }
 
-function indexMenu(items, single = null) {
-    return items.map((value, key) =>
-        ({ key, value })).filter(({ value }) =>
-        value.ref && hasList(value)
-        && (!single || hasMethod(value, single)));
-}
-
 function showHelp() {
     showLine();
     log.prompt(MESSAGES.CLI.COMMAND);
-    log.prompt(log.strformat(MESSAGES.CLI.COMMANDS));
+    log.prompt(log.strformat(MESSAGES.CLI.COMMANDS,
+        { first: '', last: '', join: ' | ', col: 5 }));
     showLine();
 }
 
@@ -136,8 +137,14 @@ function list(item) {
     return item.ref?.get?.();
 }
 
+function hasAll(selected, all) {
+    return !!all && selected.some(({ value }) =>
+        hasMethod(value, all));
+}
+
 function hasMethod(item, method) {
-    return typeof item.ref?.[method] === 'function';
+    return !!item && typeof item
+        .ref?.[method] === 'function';
 }
 
 function hasList(item) {
@@ -149,70 +156,129 @@ function hasService() {
         item.ref && hasList(item));
 }
 
-async function selectMenu(all, single) {
-    const selected = indexMenu(services, single);
-    if (selected.length === 0) {
-        await invalid();
-        return;
-    }
-    
-    showLine();
-    showMenu(services, single);
-    showLine();
-    const input = await wait(resolve => {
-        rl.question('', resolve);
-    });
-    pause();
-    const values = parse(input);
-    const [index, ...args] = values;
-    if (index === undefined || Number.isNaN(index)) {
-        await invalid();
-        return;
-    }
-    if (index === 0) {
-        await service(all, single, 0);
-        return;
-    }
-    const target = select(index, single)?.value;
-    if (!target) {
-        await cancel();
-        return;
-    }
-    log.cmd(name(target));
-    if (args.length > 0) {
-        await service(all, single, index, ...args);
-        return;
-    }
-    if (!hasMethod(target, single)) {
-        await service(all, single, index);
-        return;
-    }
-    await selectInfo(all, single, index, target);
+function indexInfo(item) {
+    return [...item.ref.get().keys()];
 }
 
-async function selectInfo(all, single, index, target) {
-    showLine();
-    await showInfo([target], true);
+function indexMenu(items, single = null) {
+    return items.map((value, key) =>
+        ({ key, value })).filter(({ value }) =>
+        value.ref && hasList(value)
+        && (!single || hasMethod(value, single)));
+}
+
+function validate(target, args) {
+    const keys = [...target.ref.get().keys()];
+    return [...new Set(args)]
+        .filter(arg => !Number.isNaN(arg))
+        .filter(arg => keys.includes(arg));
+}
+
+async function question() {
     const input = await wait(resolve => {
         rl.question('', resolve);
     });
     pause();
-    const args = parse(input);
-    if (args.length === 0) {
+    return input.trim();
+}
+
+async function askText(message = '') {
+    showLine();
+    log.prompt(message);
+    showLine();
+    const text = await question();
+    if (!text) {
         await invalid();
-        return;
+        return null;
     }
-    await service(all, single, index, ...args);
+    return text;
 }
 
 function parse(input) {
     if (!input.trim()) {
         return [];
     }
-    return [...new Set(
-        input.trim()
+    return input.trim()
         .split(/\s+/)
-        .map(Number))];
+        .map(number);
+}
+
+function number(value) {
+    if (value === undefined) {
+        return undefined;
+    }
+    if (!/^\d+$/.test(value)) {
+        return NaN;
+    }
+    return Number(value);
+}async function numberCommand(all, single, rest,
+    {attempt = single} = {}) {
+    const [index, ...args] = parse(rest.join(' '));
+    if (hasService() && attempt) {
+        log.cmd(attempt);
+    }
+    await service(all, single, index, ...args);
+}
+
+async function textCommand(all, single, rest,
+    { attempt = single, input = ''} = {}) {
+    if (hasService()) {
+        log.cmd(attempt);
+    }
+    let [i1, i2, ...i3] = rest;
+    let index = number(i1);
+    let id = number(i2);
+    let text = i3.join(' ');
+    if (i1 === undefined) {
+        const selected = indexMenu(services, single);
+        if (selected.length === 0) {
+            await invalid();
+            return;
+        }
+        showLine();
+        showMenu(selected, null);
+        showLine();
+        const menuInput = await question();
+        const [m1, m2, ...m3] = menuInput.split(/\s+/);
+        index = number(m1);
+        id = number(m2);
+        text = m3.join(' ');
+    }
+    if (index === undefined || Number.isNaN(index) || index === 0) {
+        await invalid();
+        return;
+    }
+    const selected = indexMenu(services, single);
+    const target = selected[index - 1]?.value;
+    if (!target?.ref || !hasMethod(target, single)) {
+        await invalid();
+        return;
+    }
+    if (id === undefined) {
+        showLine();
+        await showInfo([target], null);
+        const infoInput = await question();
+        const [x1, ...x2] = infoInput.split(/\s+/);
+        id = number(x1);
+        text = x2.join(' ');
+    }
+    if (id === undefined || Number.isNaN(id) || id === 0) {
+        await invalid();
+        return;
+    }
+    if (!text) {
+        await target.ref?.[all]?.(id);
+        text = await askText(input);
+        if (!text) return;
+    }
+    const values = await target.ref[single](id, text);
+    if (!printRows(values)) {
+        log.warn(MESSAGES.SHEET.ERROR404);
+        await initialize();
+        prompt();
+        return;
+    }
+    await done();
 }
 
 async function service(all, single, index, ...args) {
@@ -229,27 +295,40 @@ async function service(all, single, index, ...args) {
         return;
     }
     pause();
+    const selected = indexMenu(services, single);
     if (index === 0) {
-        for (const service of services) {
-            const ref = service.ref;
+        if (!hasAll(selected, all)) {
+            await invalid();
+            return;
+        }
+        for (const { value } of selected) {
+            const ref = value.ref;
             if (!ref?.[all]) continue;
             await ref[all]();
         }
         await done();
         return;
     }
-    const target = select(index, single)?.value;
+    const target = selected[index - 1]?.value;
     if (!target?.ref) {
         await invalid();
         return;
     }
-    if (args.length === 0 || args.includes(0)) {
+    if (all && (args.length === 0 || args.includes(0))) {
         if (!hasMethod(target, all)) {
             await invalid();
             return;
         }
         await target.ref?.[all]?.();
         await done();
+        return;
+    }
+    if (!all && args.includes(0)) {
+        await invalid();
+        return;
+    }
+    if (!all && args.length === 0) {
+        await selectInfo(all, single, index, target);
         return;
     }
     if (!hasMethod(target, single)) {
@@ -267,61 +346,103 @@ async function service(all, single, index, ...args) {
     await done();
 }
 
-function validate(target, args) {
-    const keys = [...target.ref.get().keys()];
-    return args
-        .filter(arg => !Number.isNaN(arg))
-        .filter(arg => keys.includes(arg));
+async function selectMenu(all, single) {
+    const selected = indexMenu(services, single);
+    if (selected.length === 0) {
+        await invalid();
+        return;
+    }
+    showLine();
+    showMenu(selected, all);
+    showLine();
+    const input = await question();
+    const values = parse(input);
+    const [index, ...args] = values;
+    if (index === undefined || Number.isNaN(index)) {
+        await invalid();
+        return;
+    }
+    if (index === 0) {
+        if (!hasAll(selected, all)) {
+            await invalid();
+            return;
+        }
+        await service(all, single, 0);
+        return;
+    }
+    const target = selected[index - 1]?.value;
+    if (!target) {
+        await invalid();
+        return;
+    }
+    log.cmd(name(target));
+    if (args.length > 0) {
+        await service(all, single, index, ...args);
+        return;
+    }
+    if (!hasMethod(target, single)) {
+        await service(all, single, index);
+        return;
+    }
+    await selectInfo(all, single, index, target);
+}
+
+async function selectInfo(all, single, index, target) {
+    showLine();
+    await showInfo([target], all);
+    const input = await question();
+    const args = parse(input);
+    if (args.length === 0) {
+        await invalid();
+        return;
+    }
+    await service(all, single, index, ...args);
 }
 
 async function handler(input) {
     const [cmd, ...rest] = input.trim().split(/\s+/);
-    const [index, ...args] = parse(rest.join(' '));
-
     switch (cmd.toLowerCase()) {
+
+    case locales.en.CLI.COMMANDS.READ:
+    case locales.ko.CLI.COMMANDS.READ: {
+        await textCommand('list', 'read', rest, {
+            attempt: MESSAGES.READ.ATTEMPT,
+            input: MESSAGES.READ.INPUT});
+        break;
+    }
 
     case locales.en.CLI.COMMANDS.START:
     case locales.ko.CLI.COMMANDS.START: {
-        if (hasService()) {
-            log.cmd(MESSAGES.LOGIN.ATTEMPT);
-        }
-        await service('startAll', 'start', index, ...args);
+        await numberCommand('startAll', 'start', rest, {
+            attempt: MESSAGES.LOGIN.ATTEMPT});
         break;
     }
 
     case locales.en.CLI.COMMANDS.RESTART:
     case locales.ko.CLI.COMMANDS.RESTART: {
-        if (hasService()) {
-            log.cmd(MESSAGES.LOGIN.RESTART);
-        }
-        await service('restartAll', 'restart', index, ...args);
+        await numberCommand('restartAll', 'restart', rest, {
+            attempt: MESSAGES.LOGIN.RESTART});
         break;
     }
 
     case locales.en.CLI.COMMANDS.STOP:
     case locales.ko.CLI.COMMANDS.STOP: {
-        if (hasService()) {
-            log.cmd(MESSAGES.LOGOUT.ATTEMPT);
-        }
-        await service('stopAll', 'stop', index, ...args);
+        await numberCommand('stopAll', 'stop', rest, {
+            attempt: MESSAGES.LOGOUT.ATTEMPT});
         break;
     }
 
     case locales.en.CLI.COMMANDS.STATUS:
     case locales.ko.CLI.COMMANDS.STATUS: {
-        if (hasService()) {
-            log.cmd(MESSAGES.STATUS.ATTEMPT);
-        }
-        await service('statusAll', 'status', index, ...args);
+        await numberCommand('statusAll', 'status', rest, {
+            attempt: MESSAGES.STATUS.ATTEMPT});
         break;
     }
 
     case locales.en.CLI.COMMANDS.REFRESH:
     case locales.ko.CLI.COMMANDS.REFRESH: {
-        if (hasService()) {
-            log.cmd(MESSAGES.REFRESH.ATTEMPT);
-        }
-        await service('refreshAll', 'refresh', index, ...args);
+        await numberCommand('refreshAll', 'refresh', rest, {
+            attempt: MESSAGES.REFRESH.ATTEMPT});
         break;
     }
 
@@ -352,10 +473,22 @@ async function handler(input) {
     }
 }
 
-function select(index, single = null) {
-    return indexMenu(
-        services, single
-    )[index - 1] ?? null;
+function printRows(values) {
+    if (!values || values.length === 0) {
+        return false;
+    }
+    const rows = Array.isArray(values)
+        ? values
+        : [values];
+    if (rows.length === 0) {
+        return false;
+    }
+    for (const row of rows) {
+        log.prompt(Array.isArray(row)
+            ? row.join(' ')
+            : String(row));
+    }
+    return true;
 }
 
 async function cancel() {
@@ -395,22 +528,16 @@ export function close() {
     if (!rl.closed) rl.close();
 }
 
-export function wait(resolve) {
-    return new Promise(resolve);
-}
-
-export async function shutdown() {
-    log.cmd(MESSAGES.SYSTEM.QUIT);
-    pause();
-    for (const service of services) {
-        await service.ref?.exitAll?.();
-    }
-    close();
-    process.exit(0);
+export function wait(executor) {
+    return new Promise(executor);
 }
 
 rl.on('line', async (input) => {
     const cmd = input.trim();
+    if (!cmd) {
+        prompt();
+        return;
+    }
     await handler(cmd);
 });
 
