@@ -392,8 +392,7 @@ export class DiscordBot extends Client {
     
     #printBanner(name = this.getName()) {
         if (!name) return;
-        log.prompt('\n');
-        log.prompt(LINE);
+        log.prompt(`\n${LINE}`);
         log.prompt(`${name}`);
         log.prompt(LINE);
     }

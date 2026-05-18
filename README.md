@@ -14,11 +14,11 @@ Node.js + discord.js + googleapis
 ---
 
 ## 📌 소개
-Jjing Study 는 Discord Bot과 Google Sheets를    
-CLI 으로 제어할 수 있는 개인 프로젝트입니다.    
+Jjing Study 는 Discord Bot과 Google Sheets를  
+CLI 으로 제어할 수 있는 개인 프로젝트입니다.
 
-.env 환경 변수와 Config 설정을 통해 여러 서비스를    
-관리할 수 있으며 다국어(i18n)도 지원합니다.    
+.env 환경 변수와 Config 설정을 통해 여러 서비스를  
+관리할 수 있으며 다국어(i18n)도 지원합니다.
 
 ---
 
@@ -155,37 +155,51 @@ GOOGLE_PRIVATE_EMAIL=YOUR_EMAIL
 ---
 
 ## ⌨️ CLI 명령어
-- `read` 읽기
-- `write` 쓰기
-- `append` 추가
-- `start` 시작
-- `restart` 재시작
-- `stop` 중지
-- `status` 상태
-- `refresh` 새로고침
-- `clear` 정리
-- `reboot` 재실행
-- `exit` 종료
+- `[1] read` 읽기
+- `[2] write` 쓰기
+- `[3] append` 추가
+- `[4] start` 시작
+- `[5] restart` 재시작
+- `[6] stop` 중지
+- `[7] status` 상태
+- `[8] refresh` 새로고침
+- `[9] clear` 정리
+- `[10] reboot` 재실행
+- `[11] exit` 종료
 
 ---
 
-### 사용 예시
+## 💬 사용 예시
+
+
+### 서비스 선택 메뉴 표시
 ```bash
 start
 ```
-서비스 선택 메뉴를 표시합니다.
+```bash
+4
+```
 
+### 1번 서비스 전체 시작
 ```bash
 start 1
 ```
-1번 서비스 전체를 시작합니다.
+```bash
+4 1
+```
 
+### 1번 서비스의 1번 항목 시작
 ```bash
 start 1 1
 ```
-1번 서비스의 1번 항목만 시작합니다.
+```bash
+4 1 1
+```
 
+### 전체 서비스 시작
 ```bash
 start 0
 ```
-전체 서비스를 시작합니다.
+```bash
+4 0
+```
